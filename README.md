@@ -1,6 +1,6 @@
 Before you run the the code below PLZ read my WARNING
 
-irm https://raw.githubusercontent.com/1245ym/YMs-Ultra-Lean-Optimization-Utility/main/YMs-Ultra-Lean-Optimization-Utility.ps1 | iex
+irm https://raw.githubusercontent.com/1245ym/YMs-Ultra-Lean-Optimization-Utility/refs/heads/main/YMs-Ultra-Lean-Optimization-Utility.ps1 | iex
 
 
 
