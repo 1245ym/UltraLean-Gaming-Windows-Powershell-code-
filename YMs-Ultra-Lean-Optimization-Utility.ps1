@@ -1,5 +1,5 @@
 UltraLean-Gaming-OS-v2 for powershell(run as admin,just copy and paste:it is tested and fully safe may break some unnecessary apps this is a very powerfull)
-TO RUN THE CODE COPY AND PASTE THIS INTO POWERSHELL AS ADMIN:irm https://raw.githubusercontent.com/1245ym/YMs-Ultra-Lean-Optimization-Utility/main/FILENAME.ps1 | iex
+TO RUN THE CODE COPY AND PASTE THIS INTO POWERSHELL AS ADMIN:irm https://raw.githubusercontent.com/1245ym/YMs-Ultra-Lean-Optimization-Utility/main/YMs-UltraLean-Optimization-Utility.ps1 | iex
 
 
 
