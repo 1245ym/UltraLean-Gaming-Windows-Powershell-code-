@@ -1,6 +1,6 @@
 Before you run the the code below PLZ read my WARNING
 
-https://raw.githubusercontent.com/1245ym/YMs-Ultra-Lean-Optimization-Utility/main/UltraLean-Gaming-OS-v1.ps1
+irm https://raw.githubusercontent.com/1245ym/YMs-Ultra-Lean-Optimization-Utility/main/YMs-UltraLean-Optimization-Utility.ps1 | iex
 
 
 
