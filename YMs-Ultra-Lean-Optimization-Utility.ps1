@@ -2,7 +2,7 @@ TO RUN THE CODE COPY AND PASTE THIS INTO POWERSHELL AS ADMIN:irm https://raw.git
 
 
 # =========================================================
-# WinTweak Control Center - Gaming Edition 
+# YMs-Ultra-Lean-Optimization-Utility
 # =========================================================
 
 Add-Type -AssemblyName PresentationFramework
