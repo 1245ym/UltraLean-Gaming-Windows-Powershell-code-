@@ -1,6 +1,3 @@
-# =========================================================
-# YMs-Ultra-Lean-Optimization-Utility
-# =========================================================
 
 Add-Type -AssemblyName PresentationFramework
 
