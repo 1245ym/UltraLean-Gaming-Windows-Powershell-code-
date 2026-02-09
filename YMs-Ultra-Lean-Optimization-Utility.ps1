@@ -93,7 +93,6 @@ function Restore-App($Pkg) {
 
 # ---------------- ADVANCED ALL APPS ----------------
 
-# Get all Appx packages for all users
 $AllApps = Get-AppxPackage -AllUsers | Sort-Object Name
 
 function Get-AppCategory {
@@ -107,7 +106,7 @@ function Get-AppCategory {
     return "User or OEM App"
 }
 
-# Build dynamic checkboxes for curated apps
+# Curated app checkboxes
 $appCheckboxes = ""
 foreach ($a in $Apps) {
     $safe = $a.Name.Replace(" ","_")
@@ -116,12 +115,12 @@ foreach ($a in $Apps) {
     $appCheckboxes += "<CheckBox x:Name='APP_$safe' Content='$nameEsc - $descEsc' Margin='0,3,0,0'/>`n"
 }
 
-# Build dynamic checkboxes for all apps (advanced, with category + technical info)
+# All apps checkboxes (index-based unique names)
 $allAppCheckboxes = ""
+$index = 0
 foreach ($pkg in $AllApps) {
     if (-not $pkg.Name) { continue }
 
-    $safe = $pkg.Name.Replace(" ","_").Replace(".","_").Replace("-","_")
     $nameEsc = [System.Security.SecurityElement]::Escape($pkg.Name)
     $cat = Get-AppCategory -pkg $pkg
     $catEsc = [System.Security.SecurityElement]::Escape($cat)
@@ -130,7 +129,9 @@ foreach ($pkg in $AllApps) {
     $content = "$nameEsc [$catEsc] - $fullEsc"
     $contentEsc = [System.Security.SecurityElement]::Escape($content)
 
-    $allAppCheckboxes += "<CheckBox x:Name='PKG_$safe' Content='$contentEsc' Margin='0,2,0,0'/>`n"
+    $cbName = "PKG_{0}" -f $index
+    $allAppCheckboxes += "<CheckBox x:Name='$cbName' Content='$contentEsc' Margin='0,2,0,0'/>`n"
+    $index++
 }
 
 # ---------------- UI ----------------
@@ -255,10 +256,10 @@ $ApplyBtn.Add_Click({
         }
     }
 
-    foreach ($pkg in $AllApps) {
+    for ($i = 0; $i -lt $AllApps.Count; $i++) {
+        $pkg = $AllApps[$i]
         if (-not $pkg.Name) { continue }
-        $safe = $pkg.Name.Replace(" ","_").Replace(".","_").Replace("-","_")
-        $cbName = "PKG_{0}" -f $safe
+        $cbName = "PKG_{0}" -f $i
         $cb = $Window.FindName($cbName)
         if ($cb -and $cb.IsChecked) {
             try {
@@ -289,3 +290,4 @@ $UndoBtn.Add_Click({
 })
 
 $Window.ShowDialog() | Out-Null
+
