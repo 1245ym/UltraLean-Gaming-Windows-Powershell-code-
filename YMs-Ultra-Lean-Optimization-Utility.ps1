@@ -1,4 +1,3 @@
-
 Add-Type -AssemblyName PresentationFramework
 
 # ---------------- CORE ----------------
@@ -69,14 +68,14 @@ function Undo-GamingTweaks {
     Apply-Registry "HKCU:\Software\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile" "SystemResponsiveness" 20
 }
 
-# ---------------- APPS ----------------
+# ---------------- CURATED APPS ----------------
 
 $Apps = @(
     @{ Name="Xbox App"; Pkg="Microsoft.XboxApp"; Desc="Xbox console companion and social features" },
     @{ Name="Xbox Game Bar"; Pkg="Microsoft.XboxGamingOverlay"; Desc="In-game overlay, DVR, widgets" },
     @{ Name="Feedback Hub"; Pkg="Microsoft.WindowsFeedbackHub"; Desc="Send feedback to Microsoft" },
     @{ Name="People"; Pkg="Microsoft.People"; Desc="Contacts integration" },
-    @{ Name="Movies & TV"; Pkg="Microsoft.ZuneVideo"; Desc="Media playback app" },
+    @{ Name="Movies and TV"; Pkg="Microsoft.ZuneVideo"; Desc="Media playback app" },
     @{ Name="Groove Music"; Pkg="Microsoft.ZuneMusic"; Desc="Music player" },
     @{ Name="Solitaire"; Pkg="Microsoft.MicrosoftSolitaireCollection"; Desc="Games" }
 )
@@ -92,21 +91,55 @@ function Restore-App($Pkg) {
     }
 }
 
-# ---------------- UI ----------------
+# ---------------- ADVANCED ALL APPS ----------------
 
-# Build dynamic checkboxes
+# Get all Appx packages for all users
+$AllApps = Get-AppxPackage -AllUsers | Sort-Object Name
+
+function Get-AppCategory {
+    param($pkg)
+    if ($pkg.IsFramework) { return "Framework Package" }
+    if ($pkg.Name -like "*Store*") { return "Store Infrastructure" }
+    if ($pkg.Name -like "*Shell*" -or $pkg.Name -like "*StartMenu*" -or $pkg.Name -like "*StartMenuExperience*") {
+        return "Shell Component"
+    }
+    if ($pkg.SignatureKind -eq "System") { return "System Component" }
+    return "User or OEM App"
+}
+
+# Build dynamic checkboxes for curated apps
 $appCheckboxes = ""
 foreach ($a in $Apps) {
     $safe = $a.Name.Replace(" ","_")
-    $appCheckboxes += "<CheckBox x:Name='APP_$safe' Content='$($a.Name) – $($a.Desc)' Margin='0,3,0,0'/>`n"
+    $nameEsc = [System.Security.SecurityElement]::Escape($a.Name)
+    $descEsc = [System.Security.SecurityElement]::Escape($a.Desc)
+    $appCheckboxes += "<CheckBox x:Name='APP_$safe' Content='$nameEsc - $descEsc' Margin='0,3,0,0'/>`n"
 }
 
-# Build XAML (as plain string first)
+# Build dynamic checkboxes for all apps (advanced, with category + technical info)
+$allAppCheckboxes = ""
+foreach ($pkg in $AllApps) {
+    if (-not $pkg.Name) { continue }
+
+    $safe = $pkg.Name.Replace(" ","_").Replace(".","_").Replace("-","_")
+    $nameEsc = [System.Security.SecurityElement]::Escape($pkg.Name)
+    $cat = Get-AppCategory -pkg $pkg
+    $catEsc = [System.Security.SecurityElement]::Escape($cat)
+    $fullEsc = [System.Security.SecurityElement]::Escape($pkg.PackageFullName)
+
+    $content = "$nameEsc [$catEsc] - $fullEsc"
+    $contentEsc = [System.Security.SecurityElement]::Escape($content)
+
+    $allAppCheckboxes += "<CheckBox x:Name='PKG_$safe' Content='$contentEsc' Margin='0,2,0,0'/>`n"
+}
+
+# ---------------- UI ----------------
+
 $XAML = @"
 <Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="WinTweak Control Center"
-        Height="700" Width="800"
+        Height="700" Width="1000"
         WindowStartupLocation="CenterScreen">
 
 <Grid Margin="12">
@@ -132,9 +165,9 @@ $XAML = @"
 <StackPanel Margin="10">
 <TextBlock Text="Gaming Optimizations" FontWeight="Bold"/>
 <CheckBox x:Name="GameTweaks" Content="Enable Gaming Performance Tweaks"/>
-<TextBlock Text="• High performance power plan
-• Disable Game DVR
-• Optimize multimedia scheduling"
+<TextBlock Text="- High performance power plan
+- Disable Game DVR
+- Optimize multimedia scheduling"
 Margin="20,5,0,0" Foreground="Gray"/>
 </StackPanel>
 </TabItem>
@@ -143,16 +176,29 @@ Margin="20,5,0,0" Foreground="Gray"/>
 <StackPanel Margin="10">
 <TextBlock Text="Optional Background Services" FontWeight="Bold"/>
 <CheckBox x:Name="SvcXbox" Content="Disable Xbox Services"/>
+<TextBlock Text="Affects Xbox related background services." Margin="20,5,0,0" Foreground="Gray"/>
 <CheckBox x:Name="SvcSearch" Content="Disable Search Indexing"/>
+<TextBlock Text="May impact Start menu and file search speed." Margin="20,5,0,0" Foreground="Gray"/>
 <CheckBox x:Name="SvcMaps" Content="Disable Maps Services"/>
+<TextBlock Text="Disables background map data services." Margin="20,5,0,0" Foreground="Gray"/>
 </StackPanel>
 </TabItem>
 
 <TabItem Header="Apps">
 <ScrollViewer>
 <StackPanel Margin="10">
-<TextBlock Text="Microsoft Apps (Toggle Individually)" FontWeight="Bold"/>
+<TextBlock Text="Curated Microsoft Apps" FontWeight="Bold"/>
 $appCheckboxes
+</StackPanel>
+</ScrollViewer>
+</TabItem>
+
+<TabItem Header="All Apps Advanced">
+<ScrollViewer>
+<StackPanel Margin="10">
+<TextBlock Text="All Appx Packages (Advanced - Can Break Windows)" FontWeight="Bold" Foreground="Red"/>
+<TextBlock Text="Each entry shows: Name [Category] - PackageFullName" Margin="0,5,0,10" Foreground="Gray"/>
+$allAppCheckboxes
 </StackPanel>
 </ScrollViewer>
 </TabItem>
@@ -160,8 +206,7 @@ $appCheckboxes
 <TabItem Header="Safety">
 <StackPanel Margin="10">
 <CheckBox x:Name="RestorePoint" Content="Create Restore Point Before Applying" IsChecked="True"/>
-<TextBlock Text="Undo restores services, telemetry, and gaming tweaks. Apps require Store access."
-Margin="0,10,0,0"/>
+<TextBlock Text="Undo restores telemetry, gaming tweaks, and services. App removal may not be fully reversible." Margin="0,10,0,0"/>
 </StackPanel>
 </TabItem>
 
@@ -176,7 +221,6 @@ Margin="0,10,0,0"/>
 </Window>
 "@
 
-# Convert to XML AFTER variable expansion
 [xml]$XAML = $XAML
 $reader = New-Object System.Xml.XmlNodeReader $XAML
 $Window = [Windows.Markup.XamlReader]::Load($reader)
@@ -204,11 +248,32 @@ $ApplyBtn.Add_Click({
     }
 
     foreach ($a in $Apps) {
-        $cb = $Window.FindName("APP_$($a.Name.Replace(" ","_"))")
-        if ($cb.IsChecked) { Remove-App $a.Pkg }
+        $cbName = "APP_{0}" -f ($a.Name.Replace(" ","_"))
+        $cb = $Window.FindName($cbName)
+        if ($cb -and $cb.IsChecked) {
+            Remove-App $a.Pkg
+        }
     }
 
-    [System.Windows.MessageBox]::Show("Tweaks applied successfully.")
+    foreach ($pkg in $AllApps) {
+        if (-not $pkg.Name) { continue }
+        $safe = $pkg.Name.Replace(" ","_").Replace(".","_").Replace("-","_")
+        $cbName = "PKG_{0}" -f $safe
+        $cb = $Window.FindName($cbName)
+        if ($cb -and $cb.IsChecked) {
+            try {
+                Remove-AppxPackage -AllUsers -Package $pkg.PackageFullName -ErrorAction SilentlyContinue
+            } catch {}
+            try {
+                $prov = Get-AppxProvisionedPackage -Online | Where-Object { $_.DisplayName -eq $pkg.Name }
+                foreach ($p in $prov) {
+                    Remove-AppxProvisionedPackage -Online -PackageName $p.PackageName -ErrorAction SilentlyContinue
+                }
+            } catch {}
+        }
+    }
+
+    [System.Windows.MessageBox]::Show("Tweaks and removals applied. Some changes may require restart.")
 })
 
 $UndoBtn.Add_Click({
@@ -216,10 +281,11 @@ $UndoBtn.Add_Click({
     Undo-GamingTweaks
     Set-Services @("XblAuthManager","XblGameSave","XboxNetApiSvc","WSearch","MapsBroker") "Enable"
 
-    foreach ($a in $Apps) { Restore-App $a.Pkg }
+    foreach ($a in $Apps) {
+        Restore-App $a.Pkg
+    }
 
-    [System.Windows.MessageBox]::Show("Undo completed.")
+    [System.Windows.MessageBox]::Show("Undo completed for telemetry, gaming tweaks, services, and curated apps.")
 })
 
 $Window.ShowDialog() | Out-Null
-
