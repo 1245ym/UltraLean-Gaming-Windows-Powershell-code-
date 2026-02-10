@@ -1,293 +1,270 @@
-Add-Type -AssemblyName PresentationFramework
+# =========================================================
+# YM's Ultra Lean Optimization Utility
+# Single-file PowerShell WPF Utility
+# =========================================================
 
-# ---------------- CORE ----------------
-
-function Create-RestorePoint {
-    Checkpoint-Computer -Description "WinTweak Control Center" -RestorePointType MODIFY_SETTINGS
+# -------------------- ADMIN CHECK --------------------
+if (-not ([Security.Principal.WindowsPrincipal]
+    [Security.Principal.WindowsIdentity]::GetCurrent()
+).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
+    Write-Error "Please run PowerShell as Administrator."
+    return
 }
 
-function Apply-Registry($Path, $Name, $Value) {
-    if (!(Test-Path $Path)) { New-Item -Path $Path -Force | Out-Null }
-    Set-ItemProperty -Path $Path -Name $Name -Value $Value -Force
+Set-StrictMode -Version Latest
+$ErrorActionPreference = "Stop"
+
+# -------------------- GLOBAL STATE --------------------
+$Global:ActionQueue = @()
+$Global:DryRunEnabled = $true
+$Global:DangerMode = $false
+$Global:LogPath = "$env:USERPROFILE\Documents\YM-UltraLean.log"
+
+# -------------------- LOGGING --------------------
+function Write-Log {
+    param([string]$Message)
+    $ts = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+    "$ts | $Message" | Out-File -FilePath $Global:LogPath -Append -Encoding utf8
 }
 
-function Undo-Registry($Path, $Name) {
-    Remove-ItemProperty -Path $Path -Name $Name -ErrorAction SilentlyContinue
+# -------------------- ACTION ENGINE --------------------
+function Queue-Action {
+    param(
+        [string]$Type,
+        [string]$Target,
+        $Details
+    )
+    $Global:ActionQueue += [PSCustomObject]@{
+        Type    = $Type
+        Target  = $Target
+        Details = $Details
+    }
 }
 
-# ---------------- TELEMETRY ----------------
+function Show-DryRun {
+    $msg = "DRY RUN — NO CHANGES WILL BE MADE`n`n"
+    foreach ($a in $Global:ActionQueue) {
+        $msg += "✔ $($a.Type): $($a.Target)`n"
+    }
+    [System.Windows.MessageBox]::Show($msg, "Dry Run Preview")
+}
 
-function Set-Telemetry($Level) {
-    switch ($Level) {
-        "Minimal" {
-            Apply-Registry "HKLM:\SOFTWARE\Policies\Microsoft\Windows\DataCollection" "AllowTelemetry" 1
-        }
-        "Moderate" {
-            Apply-Registry "HKLM:\SOFTWARE\Policies\Microsoft\Windows\DataCollection" "AllowTelemetry" 0
-            Set-Service DiagTrack -StartupType Disabled -ErrorAction SilentlyContinue
-        }
-        "Heavy" {
-            Apply-Registry "HKLM:\SOFTWARE\Policies\Microsoft\Windows\DataCollection" "AllowTelemetry" 0
-            "DiagTrack","dmwappushservice","WerSvc" | ForEach-Object {
-                Set-Service $_ -StartupType Disabled -ErrorAction SilentlyContinue
+function Execute-Actions {
+    if ($Global:DryRunEnabled) {
+        Show-DryRun
+        return
+    }
+
+    Write-Log "=== EXECUTION START ==="
+
+    foreach ($a in $Global:ActionQueue) {
+        Write-Log "$($a.Type): $($a.Target)"
+
+        switch ($a.Type) {
+            "RemoveApp" {
+                Get-AppxPackage -AllUsers -Name $a.Target -ErrorAction SilentlyContinue |
+                    Remove-AppxPackage -AllUsers -ErrorAction SilentlyContinue
+            }
+            "DisableService" {
+                Stop-Service -Name $a.Target -Force -ErrorAction SilentlyContinue
+                Set-Service -Name $a.Target -StartupType Disabled
+            }
+            "EnableService" {
+                Set-Service -Name $a.Target -StartupType Automatic
+                Start-Service -Name $a.Target -ErrorAction SilentlyContinue
+            }
+            "Registry" {
+                $params = $a.Details
+                Set-ItemProperty @params -Force
             }
         }
     }
+
+    $Global:ActionQueue = @()
+    Write-Log "=== EXECUTION END ==="
 }
 
-function Undo-Telemetry {
-    Undo-Registry "HKLM:\SOFTWARE\Policies\Microsoft\Windows\DataCollection" "AllowTelemetry"
-    Set-Service DiagTrack -StartupType Automatic -ErrorAction SilentlyContinue
-}
-
-# ---------------- SERVICES ----------------
-
-function Set-Services($Services, $Mode) {
-    foreach ($svc in $Services) {
-        if ($Mode -eq "Disable") {
-            Stop-Service $svc -ErrorAction SilentlyContinue
-            Set-Service $svc -StartupType Disabled -ErrorAction SilentlyContinue
-        } else {
-            Set-Service $svc -StartupType Automatic -ErrorAction SilentlyContinue
-        }
-    }
-}
-
-# ---------------- GAMING ----------------
-
-function Apply-GamingTweaks {
-    powercfg /setactive SCHEME_MIN
-    Apply-Registry "HKCU:\System\GameConfigStore" "GameDVR_Enabled" 0
-    Apply-Registry "HKCU:\Software\Microsoft\GameBar" "AllowAutoGameMode" 1
-    Apply-Registry "HKCU:\Software\Microsoft\GameBar" "ShowStartupPanel" 0
-    Apply-Registry "HKCU:\Software\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile" "SystemResponsiveness" 0
-}
-
-function Undo-GamingTweaks {
-    Apply-Registry "HKCU:\System\GameConfigStore" "GameDVR_Enabled" 1
-    Apply-Registry "HKCU:\Software\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile" "SystemResponsiveness" 20
-}
-
-# ---------------- CURATED APPS ----------------
-
+# -------------------- DATA --------------------
 $Apps = @(
-    @{ Name="Xbox App"; Pkg="Microsoft.XboxApp"; Desc="Xbox console companion and social features" },
-    @{ Name="Xbox Game Bar"; Pkg="Microsoft.XboxGamingOverlay"; Desc="In-game overlay, DVR, widgets" },
-    @{ Name="Feedback Hub"; Pkg="Microsoft.WindowsFeedbackHub"; Desc="Send feedback to Microsoft" },
-    @{ Name="People"; Pkg="Microsoft.People"; Desc="Contacts integration" },
-    @{ Name="Movies and TV"; Pkg="Microsoft.ZuneVideo"; Desc="Media playback app" },
-    @{ Name="Groove Music"; Pkg="Microsoft.ZuneMusic"; Desc="Music player" },
-    @{ Name="Solitaire"; Pkg="Microsoft.MicrosoftSolitaireCollection"; Desc="Games" }
+    @{ Name="Microsoft.XboxApp"; Desc="Xbox application"; System=$false },
+    @{ Name="Microsoft.ZuneMusic"; Desc="Groove Music"; System=$false },
+    @{ Name="Microsoft.WindowsMaps"; Desc="Offline maps"; System=$false },
+    @{ Name="Microsoft.People"; Desc="Contacts app"; System=$true }
 )
 
-function Remove-App($Pkg) {
-    Get-AppxPackage $Pkg -AllUsers | Remove-AppxPackage -ErrorAction SilentlyContinue
-}
+$Services = @(
+    @{ Name="DiagTrack"; Desc="Telemetry service" },
+    @{ Name="WSearch"; Desc="Windows Search indexing" },
+    @{ Name="MapsBroker"; Desc="Maps background service" }
+)
 
-function Restore-App($Pkg) {
-    Get-AppxPackage -AllUsers | Where-Object {$_.Name -eq $Pkg} |
-    ForEach-Object {
-        Add-AppxPackage -Register "$($_.InstallLocation)\AppXManifest.xml" -DisableDevelopmentMode
+$Presets = @{
+    "Gaming Beast" = @{
+        Apps     = @("Microsoft.XboxApp","Microsoft.ZuneMusic")
+        Services = @("DiagTrack","WSearch")
+    }
+    "Minimal" = @{
+        Apps     = @("Microsoft.People","Microsoft.WindowsMaps")
+        Services = @("DiagTrack")
     }
 }
 
-# ---------------- ADVANCED ALL APPS ----------------
-
-$AllApps = Get-AppxPackage -AllUsers | Sort-Object Name
-
-function Get-AppCategory {
-    param($pkg)
-    if ($pkg.IsFramework) { return "Framework Package" }
-    if ($pkg.Name -like "*Store*") { return "Store Infrastructure" }
-    if ($pkg.Name -like "*Shell*" -or $pkg.Name -like "*StartMenu*" -or $pkg.Name -like "*StartMenuExperience*") {
-        return "Shell Component"
-    }
-    if ($pkg.SignatureKind -eq "System") { return "System Component" }
-    return "User or OEM App"
-}
-
-# Curated app checkboxes
-$appCheckboxes = ""
-foreach ($a in $Apps) {
-    $safe = $a.Name.Replace(" ","_")
-    $nameEsc = [System.Security.SecurityElement]::Escape($a.Name)
-    $descEsc = [System.Security.SecurityElement]::Escape($a.Desc)
-    $appCheckboxes += "<CheckBox x:Name='APP_$safe' Content='$nameEsc - $descEsc' Margin='0,3,0,0'/>`n"
-}
-
-# All apps checkboxes (index-based unique names)
-$allAppCheckboxes = ""
-$index = 0
-foreach ($pkg in $AllApps) {
-    if (-not $pkg.Name) { continue }
-
-    $nameEsc = [System.Security.SecurityElement]::Escape($pkg.Name)
-    $cat = Get-AppCategory -pkg $pkg
-    $catEsc = [System.Security.SecurityElement]::Escape($cat)
-    $fullEsc = [System.Security.SecurityElement]::Escape($pkg.PackageFullName)
-
-    $content = "$nameEsc [$catEsc] - $fullEsc"
-    $contentEsc = [System.Security.SecurityElement]::Escape($content)
-
-    $cbName = "PKG_{0}" -f $index
-    $allAppCheckboxes += "<CheckBox x:Name='$cbName' Content='$contentEsc' Margin='0,2,0,0'/>`n"
-    $index++
-}
-
-# ---------------- UI ----------------
+# -------------------- UI --------------------
+Add-Type -AssemblyName PresentationFramework
 
 $XAML = @"
 <Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="WinTweak Control Center"
-        Height="700" Width="1000"
+        Title="YM Ultra Lean Optimization Utility"
+        Width="900" Height="600"
+        Background="#111"
+        Foreground="White"
         WindowStartupLocation="CenterScreen">
 
-<Grid Margin="12">
-<Grid.RowDefinitions>
-<RowDefinition Height="*"/>
-<RowDefinition Height="Auto"/>
-</Grid.RowDefinitions>
-
+<Grid Margin="10">
 <TabControl>
 
-<TabItem Header="Privacy">
-<StackPanel Margin="10">
-<TextBlock Text="Telemetry Level" FontWeight="Bold"/>
-<ComboBox x:Name="TelemetryLevel" Width="220">
-<ComboBoxItem Content="Minimal"/>
-<ComboBoxItem Content="Moderate"/>
-<ComboBoxItem Content="Heavy"/>
-</ComboBox>
-</StackPanel>
-</TabItem>
-
-<TabItem Header="Gaming">
-<StackPanel Margin="10">
-<TextBlock Text="Gaming Optimizations" FontWeight="Bold"/>
-<CheckBox x:Name="GameTweaks" Content="Enable Gaming Performance Tweaks"/>
-<TextBlock Text="- High performance power plan
-- Disable Game DVR
-- Optimize multimedia scheduling"
-Margin="20,5,0,0" Foreground="Gray"/>
-</StackPanel>
-</TabItem>
-
-<TabItem Header="Services">
-<StackPanel Margin="10">
-<TextBlock Text="Optional Background Services" FontWeight="Bold"/>
-<CheckBox x:Name="SvcXbox" Content="Disable Xbox Services"/>
-<TextBlock Text="Affects Xbox related background services." Margin="20,5,0,0" Foreground="Gray"/>
-<CheckBox x:Name="SvcSearch" Content="Disable Search Indexing"/>
-<TextBlock Text="May impact Start menu and file search speed." Margin="20,5,0,0" Foreground="Gray"/>
-<CheckBox x:Name="SvcMaps" Content="Disable Maps Services"/>
-<TextBlock Text="Disables background map data services." Margin="20,5,0,0" Foreground="Gray"/>
+<TabItem Header="Overview">
+<StackPanel>
+<TextBlock FontSize="22" FontWeight="Bold" Text="YM Ultra Lean Optimization Utility"/>
+<TextBlock Margin="0,10,0,0" TextWrapping="Wrap">
+Safe-by-default Windows optimization tool.
+Dry Run is enabled by default.
+Danger Mode unlocks system apps.
+Nothing runs unless you click Apply.
+</TextBlock>
 </StackPanel>
 </TabItem>
 
 <TabItem Header="Apps">
 <ScrollViewer>
-<StackPanel Margin="10">
-<TextBlock Text="Curated Microsoft Apps" FontWeight="Bold"/>
-$appCheckboxes
-</StackPanel>
+<StackPanel Name="AppPanel"/>
 </ScrollViewer>
 </TabItem>
 
-<TabItem Header="All Apps Advanced">
+<TabItem Header="Services">
 <ScrollViewer>
-<StackPanel Margin="10">
-<TextBlock Text="All Appx Packages (Advanced - Can Break Windows)" FontWeight="Bold" Foreground="Red"/>
-<TextBlock Text="Each entry shows: Name [Category] - PackageFullName" Margin="0,5,0,10" Foreground="Gray"/>
-$allAppCheckboxes
-</StackPanel>
+<StackPanel Name="ServicePanel"/>
 </ScrollViewer>
 </TabItem>
 
-<TabItem Header="Safety">
-<StackPanel Margin="10">
-<CheckBox x:Name="RestorePoint" Content="Create Restore Point Before Applying" IsChecked="True"/>
-<TextBlock Text="Undo restores telemetry, gaming tweaks, and services. App removal may not be fully reversible." Margin="0,10,0,0"/>
+<TabItem Header="Presets">
+<StackPanel>
+<ComboBox Name="PresetBox" Margin="0,0,0,10"/>
+<Button Name="ApplyPreset" Content="Apply Preset"/>
+</StackPanel>
+</TabItem>
+
+<TabItem Header="Controls">
+<StackPanel>
+<CheckBox Name="DryRunBox" IsChecked="True">Dry Run (Preview Only)</CheckBox>
+<CheckBox Name="DangerBox">Danger Mode (Unlock System Apps)</CheckBox>
+<Button Name="ApplyBtn" Margin="0,10,0,0">Apply Selected Actions</Button>
 </StackPanel>
 </TabItem>
 
 </TabControl>
-
-<StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right">
-<Button x:Name="UndoBtn" Content="Undo" Width="110" Margin="5"/>
-<Button x:Name="ApplyBtn" Content="Apply" Width="110" Margin="5"/>
-</StackPanel>
-
 </Grid>
 </Window>
 "@
 
-[xml]$XAML = $XAML
-$reader = New-Object System.Xml.XmlNodeReader $XAML
-$Window = [Windows.Markup.XamlReader]::Load($reader)
+# -------------------- LOAD XAML (CORRECT METHOD) --------------------
+$reader = New-Object System.IO.StringReader $XAML
+$xmlReader = [System.Xml.XmlReader]::Create($reader)
+$Window = [Windows.Markup.XamlReader]::Load($xmlReader)
 
-# ---------------- LOGIC ----------------
+if (-not $Window) {
+    throw "Failed to load UI."
+}
 
-$ApplyBtn = $Window.FindName("ApplyBtn")
-$UndoBtn  = $Window.FindName("UndoBtn")
+# -------------------- CONTROL REFERENCES --------------------
+$AppPanel     = $Window.FindName("AppPanel")
+$ServicePanel = $Window.FindName("ServicePanel")
+$PresetBox    = $Window.FindName("PresetBox")
+$ApplyPreset  = $Window.FindName("ApplyPreset")
+$ApplyBtn     = $Window.FindName("ApplyBtn")
+$DryRunBox    = $Window.FindName("DryRunBox")
+$DangerBox    = $Window.FindName("DangerBox")
+
+# -------------------- POPULATE APPS --------------------
+$AppCheckboxes = @{}
+
+function Load-Apps {
+    $AppPanel.Children.Clear()
+    $AppCheckboxes.Clear()
+
+    foreach ($app in $Apps) {
+        if ($app.System -and -not $Global:DangerMode) { continue }
+
+        $cb = New-Object System.Windows.Controls.CheckBox
+        $cb.Content = "$($app.Name) — $($app.Desc)"
+        $cb.Margin = "0,2,0,2"
+        $AppPanel.Children.Add($cb)
+        $AppCheckboxes[$app.Name] = $cb
+    }
+}
+
+Load-Apps
+
+# -------------------- POPULATE SERVICES --------------------
+$ServiceCheckboxes = @{}
+foreach ($svc in $Services) {
+    $cb = New-Object System.Windows.Controls.CheckBox
+    $cb.Content = "$($svc.Name) — $($svc.Desc)"
+    $cb.Margin = "0,2,0,2"
+    $ServicePanel.Children.Add($cb)
+    $ServiceCheckboxes[$svc.Name] = $cb
+}
+
+# -------------------- PRESETS --------------------
+$Presets.Keys | ForEach-Object { $PresetBox.Items.Add($_) }
+
+$ApplyPreset.Add_Click({
+    $name = $PresetBox.SelectedItem
+    if (-not $name) { return }
+
+    foreach ($cb in $AppCheckboxes.Values) { $cb.IsChecked = $false }
+    foreach ($cb in $ServiceCheckboxes.Values) { $cb.IsChecked = $false }
+
+    foreach ($a in $Presets[$name].Apps) {
+        if ($AppCheckboxes.ContainsKey($a)) {
+            $AppCheckboxes[$a].IsChecked = $true
+        }
+    }
+    foreach ($s in $Presets[$name].Services) {
+        if ($ServiceCheckboxes.ContainsKey($s)) {
+            $ServiceCheckboxes[$s].IsChecked = $true
+        }
+    }
+})
+
+# -------------------- CONTROLS --------------------
+$DryRunBox.Add_Click({
+    $Global:DryRunEnabled = [bool]$DryRunBox.IsChecked
+})
+
+$DangerBox.Add_Click({
+    $Global:DangerMode = [bool]$DangerBox.IsChecked
+    Load-Apps
+})
 
 $ApplyBtn.Add_Click({
-    if ($Window.FindName("RestorePoint").IsChecked) { Create-RestorePoint }
+    $Global:ActionQueue = @()
 
-    Set-Telemetry $Window.FindName("TelemetryLevel").Text
-
-    if ($Window.FindName("GameTweaks").IsChecked) { Apply-GamingTweaks }
-
-    if ($Window.FindName("SvcXbox").IsChecked) {
-        Set-Services @("XblAuthManager","XblGameSave","XboxNetApiSvc") "Disable"
-    }
-    if ($Window.FindName("SvcSearch").IsChecked) {
-        Set-Services @("WSearch") "Disable"
-    }
-    if ($Window.FindName("SvcMaps").IsChecked) {
-        Set-Services @("MapsBroker") "Disable"
-    }
-
-    foreach ($a in $Apps) {
-        $cbName = "APP_{0}" -f ($a.Name.Replace(" ","_"))
-        $cb = $Window.FindName($cbName)
-        if ($cb -and $cb.IsChecked) {
-            Remove-App $a.Pkg
+    foreach ($name in $AppCheckboxes.Keys) {
+        if ($AppCheckboxes[$name].IsChecked) {
+            Queue-Action "RemoveApp" $name $null
         }
     }
 
-    for ($i = 0; $i -lt $AllApps.Count; $i++) {
-        $pkg = $AllApps[$i]
-        if (-not $pkg.Name) { continue }
-        $cbName = "PKG_{0}" -f $i
-        $cb = $Window.FindName($cbName)
-        if ($cb -and $cb.IsChecked) {
-            try {
-                Remove-AppxPackage -AllUsers -Package $pkg.PackageFullName -ErrorAction SilentlyContinue
-            } catch {}
-            try {
-                $prov = Get-AppxProvisionedPackage -Online | Where-Object { $_.DisplayName -eq $pkg.Name }
-                foreach ($p in $prov) {
-                    Remove-AppxProvisionedPackage -Online -PackageName $p.PackageName -ErrorAction SilentlyContinue
-                }
-            } catch {}
+    foreach ($name in $ServiceCheckboxes.Keys) {
+        if ($ServiceCheckboxes[$name].IsChecked) {
+            Queue-Action "DisableService" $name $null
         }
     }
 
-    [System.Windows.MessageBox]::Show("Tweaks and removals applied. Some changes may require restart.")
+    Execute-Actions
 })
 
-$UndoBtn.Add_Click({
-    Undo-Telemetry
-    Undo-GamingTweaks
-    Set-Services @("XblAuthManager","XblGameSave","XboxNetApiSvc","WSearch","MapsBroker") "Enable"
-
-    foreach ($a in $Apps) {
-        Restore-App $a.Pkg
-    }
-
-    [System.Windows.MessageBox]::Show("Undo completed for telemetry, gaming tweaks, services, and curated apps.")
-})
-
+# -------------------- SHOW UI --------------------
 $Window.ShowDialog() | Out-Null
 
