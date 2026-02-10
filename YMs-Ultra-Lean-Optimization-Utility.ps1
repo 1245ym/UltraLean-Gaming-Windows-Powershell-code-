@@ -1,13 +1,13 @@
 # =========================================================
-# YM's Ultra Lean Optimization Utility
-# Single-file PowerShell WPF Utility
+# YM Ultra Lean GAMING Optimization Utility
+# Single-file PowerShell WPF Tool
 # =========================================================
 
 # -------------------- ADMIN CHECK --------------------
 if (-not ([Security.Principal.WindowsPrincipal]
     [Security.Principal.WindowsIdentity]::GetCurrent()
 ).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
-    Write-Error "Please run PowerShell as Administrator."
+    Write-Error "Run PowerShell as Administrator."
     return
 }
 
@@ -18,7 +18,7 @@ $ErrorActionPreference = "Stop"
 $Global:ActionQueue = @()
 $Global:DryRunEnabled = $true
 $Global:DangerMode = $false
-$Global:LogPath = "$env:USERPROFILE\Documents\YM-UltraLean.log"
+$Global:LogPath = "$env:USERPROFILE\Documents\YM-Gaming-Optimizer.log"
 
 # -------------------- LOGGING --------------------
 function Write-Log {
@@ -29,37 +29,27 @@ function Write-Log {
 
 # -------------------- ACTION ENGINE --------------------
 function Queue-Action {
-    param(
-        [string]$Type,
-        [string]$Target,
-        $Details
-    )
+    param([string]$Type,[string]$Target,$Details)
     $Global:ActionQueue += [PSCustomObject]@{
-        Type    = $Type
-        Target  = $Target
-        Details = $Details
+        Type=$Type; Target=$Target; Details=$Details
     }
 }
 
 function Show-DryRun {
-    $msg = "DRY RUN — NO CHANGES WILL BE MADE`n`n"
+    $msg = "🎮 GAMING DRY RUN — NO CHANGES MADE`n`n"
     foreach ($a in $Global:ActionQueue) {
         $msg += "✔ $($a.Type): $($a.Target)`n"
     }
-    [System.Windows.MessageBox]::Show($msg, "Dry Run Preview")
+    [System.Windows.MessageBox]::Show($msg,"Dry Run Preview")
 }
 
 function Execute-Actions {
-    if ($Global:DryRunEnabled) {
-        Show-DryRun
-        return
-    }
+    if ($Global:DryRunEnabled) { Show-DryRun; return }
 
-    Write-Log "=== EXECUTION START ==="
+    Write-Log "=== GAMING OPTIMIZATION START ==="
 
     foreach ($a in $Global:ActionQueue) {
         Write-Log "$($a.Type): $($a.Target)"
-
         switch ($a.Type) {
             "RemoveApp" {
                 Get-AppxPackage -AllUsers -Name $a.Target -ErrorAction SilentlyContinue |
@@ -69,10 +59,6 @@ function Execute-Actions {
                 Stop-Service -Name $a.Target -Force -ErrorAction SilentlyContinue
                 Set-Service -Name $a.Target -StartupType Disabled
             }
-            "EnableService" {
-                Set-Service -Name $a.Target -StartupType Automatic
-                Start-Service -Name $a.Target -ErrorAction SilentlyContinue
-            }
             "Registry" {
                 $params = $a.Details
                 Set-ItemProperty @params -Force
@@ -80,85 +66,90 @@ function Execute-Actions {
         }
     }
 
-    $Global:ActionQueue = @()
-    Write-Log "=== EXECUTION END ==="
+    $Global:ActionQueue=@()
+    Write-Log "=== GAMING OPTIMIZATION END ==="
 }
 
-# -------------------- DATA --------------------
+# -------------------- GAMING DATA --------------------
 $Apps = @(
-    @{ Name="Microsoft.XboxApp"; Desc="Xbox application"; System=$false },
-    @{ Name="Microsoft.ZuneMusic"; Desc="Groove Music"; System=$false },
-    @{ Name="Microsoft.WindowsMaps"; Desc="Offline maps"; System=$false },
-    @{ Name="Microsoft.People"; Desc="Contacts app"; System=$true }
+    @{Name="Microsoft.XboxApp";Desc="Xbox App (not needed for most PC gaming)";System=$false},
+    @{Name="Microsoft.XboxGamingOverlay";Desc="Xbox Game Bar overlay";System=$true},
+    @{Name="Microsoft.ZuneMusic";Desc="Groove Music background services";System=$false},
+    @{Name="Microsoft.People";Desc="Contacts app, background sync";System=$true},
+    @{Name="Microsoft.WindowsMaps";Desc="Offline maps services";System=$false}
 )
 
 $Services = @(
-    @{ Name="DiagTrack"; Desc="Telemetry service" },
-    @{ Name="WSearch"; Desc="Windows Search indexing" },
-    @{ Name="MapsBroker"; Desc="Maps background service" }
+    @{Name="DiagTrack";Desc="Telemetry (CPU + disk usage)"},
+    @{Name="WSearch";Desc="Indexing causes disk & CPU spikes"},
+    @{Name="SysMain";Desc="Prefetch/Superfetch causes stutter on SSDs"},
+    @{Name="MapsBroker";Desc="Maps background tasks"}
 )
 
 $Presets = @{
-    "Gaming Beast" = @{
-        Apps     = @("Microsoft.XboxApp","Microsoft.ZuneMusic")
-        Services = @("DiagTrack","WSearch")
+    "FPS MAXIMUM" = @{
+        Apps=@("Microsoft.XboxGamingOverlay","Microsoft.ZuneMusic")
+        Services=@("DiagTrack","WSearch","SysMain")
     }
-    "Minimal" = @{
-        Apps     = @("Microsoft.People","Microsoft.WindowsMaps")
-        Services = @("DiagTrack")
+    "LOW LATENCY" = @{
+        Apps=@("Microsoft.XboxApp","Microsoft.People")
+        Services=@("DiagTrack","MapsBroker")
+    }
+    "COMPETITIVE HARDCORE" = @{
+        Apps=@("Microsoft.XboxApp","Microsoft.XboxGamingOverlay","Microsoft.ZuneMusic","Microsoft.People")
+        Services=@("DiagTrack","WSearch","SysMain","MapsBroker")
     }
 }
 
 # -------------------- UI --------------------
 Add-Type -AssemblyName PresentationFramework
 
-$XAML = @"
+$XAML=@"
 <Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        Title="YM Ultra Lean Optimization Utility"
-        Width="900" Height="600"
-        Background="#111"
-        Foreground="White"
-        WindowStartupLocation="CenterScreen">
+Title="YM Ultra Lean GAMING Optimizer"
+Width="900" Height="600"
+Background="#0b0b0b" Foreground="White"
+WindowStartupLocation="CenterScreen">
 
 <Grid Margin="10">
 <TabControl>
 
 <TabItem Header="Overview">
 <StackPanel>
-<TextBlock FontSize="22" FontWeight="Bold" Text="YM Ultra Lean Optimization Utility"/>
+<TextBlock FontSize="22" FontWeight="Bold" Text="🎮 YM GAMING OPTIMIZATION UTILITY"/>
 <TextBlock Margin="0,10,0,0" TextWrapping="Wrap">
-Safe-by-default Windows optimization tool.
-Dry Run is enabled by default.
-Danger Mode unlocks system apps.
-Nothing runs unless you click Apply.
+Designed for FPS stability, reduced latency, and background task elimination.
+Dry Run is ON by default.
+Danger Mode unlocks aggressive gaming tweaks.
+Nothing applies unless you click APPLY.
 </TextBlock>
 </StackPanel>
 </TabItem>
 
-<TabItem Header="Apps">
+<TabItem Header="Gaming Apps">
 <ScrollViewer>
 <StackPanel Name="AppPanel"/>
 </ScrollViewer>
 </TabItem>
 
-<TabItem Header="Services">
+<TabItem Header="Gaming Services">
 <ScrollViewer>
 <StackPanel Name="ServicePanel"/>
 </ScrollViewer>
 </TabItem>
 
-<TabItem Header="Presets">
+<TabItem Header="Gaming Presets">
 <StackPanel>
 <ComboBox Name="PresetBox" Margin="0,0,0,10"/>
-<Button Name="ApplyPreset" Content="Apply Preset"/>
+<Button Name="ApplyPreset" Content="Apply Gaming Preset"/>
 </StackPanel>
 </TabItem>
 
 <TabItem Header="Controls">
 <StackPanel>
-<CheckBox Name="DryRunBox" IsChecked="True">Dry Run (Preview Only)</CheckBox>
-<CheckBox Name="DangerBox">Danger Mode (Unlock System Apps)</CheckBox>
-<Button Name="ApplyBtn" Margin="0,10,0,0">Apply Selected Actions</Button>
+<CheckBox Name="DryRunBox" IsChecked="True">Dry Run (Preview Gaming Changes)</CheckBox>
+<CheckBox Name="DangerBox">Danger Mode (Hardcore Gaming Tweaks)</CheckBox>
+<Button Name="ApplyBtn" Margin="0,10,0,0">APPLY GAMING OPTIMIZATION</Button>
 </StackPanel>
 </TabItem>
 
@@ -167,104 +158,69 @@ Nothing runs unless you click Apply.
 </Window>
 "@
 
-# -------------------- LOAD XAML (CORRECT METHOD) --------------------
-$reader = New-Object System.IO.StringReader $XAML
-$xmlReader = [System.Xml.XmlReader]::Create($reader)
-$Window = [Windows.Markup.XamlReader]::Load($xmlReader)
+# -------------------- LOAD UI --------------------
+$reader=New-Object System.IO.StringReader $XAML
+$xmlReader=[System.Xml.XmlReader]::Create($reader)
+$Window=[Windows.Markup.XamlReader]::Load($xmlReader)
+if(-not $Window){throw "UI failed to load"}
 
-if (-not $Window) {
-    throw "Failed to load UI."
-}
+# -------------------- CONTROLS --------------------
+$AppPanel=$Window.FindName("AppPanel")
+$ServicePanel=$Window.FindName("ServicePanel")
+$PresetBox=$Window.FindName("PresetBox")
+$ApplyPreset=$Window.FindName("ApplyPreset")
+$ApplyBtn=$Window.FindName("ApplyBtn")
+$DryRunBox=$Window.FindName("DryRunBox")
+$DangerBox=$Window.FindName("DangerBox")
 
-# -------------------- CONTROL REFERENCES --------------------
-$AppPanel     = $Window.FindName("AppPanel")
-$ServicePanel = $Window.FindName("ServicePanel")
-$PresetBox    = $Window.FindName("PresetBox")
-$ApplyPreset  = $Window.FindName("ApplyPreset")
-$ApplyBtn     = $Window.FindName("ApplyBtn")
-$DryRunBox    = $Window.FindName("DryRunBox")
-$DangerBox    = $Window.FindName("DangerBox")
-
-# -------------------- POPULATE APPS --------------------
-$AppCheckboxes = @{}
-
+# -------------------- LOAD APPS --------------------
+$AppCheckboxes=@{}
 function Load-Apps {
     $AppPanel.Children.Clear()
     $AppCheckboxes.Clear()
-
-    foreach ($app in $Apps) {
-        if ($app.System -and -not $Global:DangerMode) { continue }
-
-        $cb = New-Object System.Windows.Controls.CheckBox
-        $cb.Content = "$($app.Name) — $($app.Desc)"
-        $cb.Margin = "0,2,0,2"
+    foreach($app in $Apps){
+        if($app.System -and -not $Global:DangerMode){continue}
+        $cb=New-Object System.Windows.Controls.CheckBox
+        $cb.Content="$($app.Name) — $($app.Desc)"
+        $cb.Margin="0,2,0,2"
         $AppPanel.Children.Add($cb)
-        $AppCheckboxes[$app.Name] = $cb
+        $AppCheckboxes[$app.Name]=$cb
     }
 }
-
 Load-Apps
 
-# -------------------- POPULATE SERVICES --------------------
-$ServiceCheckboxes = @{}
-foreach ($svc in $Services) {
-    $cb = New-Object System.Windows.Controls.CheckBox
-    $cb.Content = "$($svc.Name) — $($svc.Desc)"
-    $cb.Margin = "0,2,0,2"
+# -------------------- LOAD SERVICES --------------------
+$ServiceCheckboxes=@{}
+foreach($svc in $Services){
+    $cb=New-Object System.Windows.Controls.CheckBox
+    $cb.Content="$($svc.Name) — $($svc.Desc)"
+    $cb.Margin="0,2,0,2"
     $ServicePanel.Children.Add($cb)
-    $ServiceCheckboxes[$svc.Name] = $cb
+    $ServiceCheckboxes[$svc.Name]=$cb
 }
 
 # -------------------- PRESETS --------------------
 $Presets.Keys | ForEach-Object { $PresetBox.Items.Add($_) }
 
 $ApplyPreset.Add_Click({
-    $name = $PresetBox.SelectedItem
-    if (-not $name) { return }
-
-    foreach ($cb in $AppCheckboxes.Values) { $cb.IsChecked = $false }
-    foreach ($cb in $ServiceCheckboxes.Values) { $cb.IsChecked = $false }
-
-    foreach ($a in $Presets[$name].Apps) {
-        if ($AppCheckboxes.ContainsKey($a)) {
-            $AppCheckboxes[$a].IsChecked = $true
-        }
-    }
-    foreach ($s in $Presets[$name].Services) {
-        if ($ServiceCheckboxes.ContainsKey($s)) {
-            $ServiceCheckboxes[$s].IsChecked = $true
-        }
-    }
+    $p=$PresetBox.SelectedItem
+    if(-not $p){return}
+    $AppCheckboxes.Values | ForEach-Object{$_.IsChecked=$false}
+    $ServiceCheckboxes.Values | ForEach-Object{$_.IsChecked=$false}
+    foreach($a in $Presets[$p].Apps){ if($AppCheckboxes[$a]){$AppCheckboxes[$a].IsChecked=$true}}
+    foreach($s in $Presets[$p].Services){ if($ServiceCheckboxes[$s]){$ServiceCheckboxes[$s].IsChecked=$true}}
 })
 
 # -------------------- CONTROLS --------------------
-$DryRunBox.Add_Click({
-    $Global:DryRunEnabled = [bool]$DryRunBox.IsChecked
-})
-
-$DangerBox.Add_Click({
-    $Global:DangerMode = [bool]$DangerBox.IsChecked
-    Load-Apps
-})
+$DryRunBox.Add_Click({$Global:DryRunEnabled=[bool]$DryRunBox.IsChecked})
+$DangerBox.Add_Click({$Global:DangerMode=[bool]$DangerBox.IsChecked;Load-Apps})
 
 $ApplyBtn.Add_Click({
-    $Global:ActionQueue = @()
-
-    foreach ($name in $AppCheckboxes.Keys) {
-        if ($AppCheckboxes[$name].IsChecked) {
-            Queue-Action "RemoveApp" $name $null
-        }
-    }
-
-    foreach ($name in $ServiceCheckboxes.Keys) {
-        if ($ServiceCheckboxes[$name].IsChecked) {
-            Queue-Action "DisableService" $name $null
-        }
-    }
-
+    $Global:ActionQueue=@()
+    foreach($n in $AppCheckboxes.Keys){if($AppCheckboxes[$n].IsChecked){Queue-Action "RemoveApp" $n $null}}
+    foreach($n in $ServiceCheckboxes.Keys){if($ServiceCheckboxes[$n].IsChecked){Queue-Action "DisableService" $n $null}}
     Execute-Actions
 })
 
-# -------------------- SHOW UI --------------------
+# -------------------- SHOW --------------------
 $Window.ShowDialog() | Out-Null
-
