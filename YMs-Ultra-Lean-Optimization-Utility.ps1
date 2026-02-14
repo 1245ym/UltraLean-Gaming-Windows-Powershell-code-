@@ -5,8 +5,8 @@
     Inspired by Chris Titus Tech's WinUtil, but rebuilt:
     - Modern WPF GUI
     - Apps installer (winget)
-    - Debloat
-    - Tweaks
+    - Debloat (Safe, Recommended, Aggressive)
+    - Tweaks (Explorer, Taskbar, Context Menu, Privacy, Gaming)
     - Backup
     - Latency analytics
     - Services manager
@@ -14,288 +14,149 @@
     - Profiles (Gaming, Streaming, Work, Performance)
 .NOTES
     Author: Yusuf Mullas
-    License: MIT (recommended if you publish)
+    License: MIT
 #>
 
 [CmdletBinding()]
 param()
 
-# ============================================
-#  GLOBAL CONFIG / METADATA
-# ============================================
 $global:WinUtil = @{
     Name    = "Yusuf Mullas WinUtil"
     Version = "2026.02.14"
     Repo    = "https://github.com/YusufMullas/YMs-Ultra-Lean-Optimization-Utility"
 }
 
-# ============================================
-#  GLOBAL DESCRIPTIONS
-# ============================================
-
-# Apps
+# ============================
+# APP DESCRIPTIONS
+# ============================
 $global:AppDescriptions = @{
-    "7-Zip" = @"
-7-Zip - Lightweight file archiver:
-- Adds support for .7z, .zip, .rar and more
-- Very fast and open-source
-- Great replacement for WinRAR or built-in ZIP
-"@
-
-    "Google Chrome" = @"
-Google Chrome - Web browser:
-- Fast, widely supported browser
-- Syncs with Google account
-- Good for web apps, streaming, and general use
-"@
-
-    "Visual Studio Code" = @"
-Visual Studio Code - Code editor:
-- Lightweight but powerful editor
-- Extensions for any language
-- Great for development, scripting, and config editing
-"@
-
-    "Discord" = @"
-Discord - Voice and text chat:
-- Popular for gaming communities
-- Voice channels, screen share, and DMs
-- Used for gaming, study groups, and communities
-"@
-
-    "Steam" = @"
-Steam - Game launcher and store:
-- Central hub for PC games
-- Cloud saves, friends, achievements
-- Required for many modern PC titles
-"@
+    "7-Zip" = "7-Zip - Lightweight file archiver."
+    "Google Chrome" = "Chrome - Fast browser."
+    "Visual Studio Code" = "VS Code - Code editor."
+    "Discord" = "Discord - Chat and voice."
+    "Steam" = "Steam - Game launcher."
 }
 
-# Debloat
+# ============================
+# DEBLOAT DESCRIPTIONS
+# ============================
 $global:DebloatDescriptions = @{
-    "RemoveBloatware" = @"
-Removes common preinstalled Microsoft / OEM apps:
-- Xbox apps, 3D Viewer, Office Hub, Solitaire, etc.
-- Frees disk space and declutters Start menu
-- Recommended for clean, focused systems
-Note: Some apps can be reinstalled from Microsoft Store.
-"@
-
-    "DisableTelemetry" = @"
-Disables basic telemetry and data collection:
-- Stops key telemetry services (DiagTrack, dmwappushservice)
-- Reduces background data collection
-- Slight privacy and performance improvement
-"@
-
-    "DisableSuggestions" = @"
-Disables Windows suggestions and consumer features:
-- Removes Start menu suggestions
-- Disables lock screen tips and ads
-- Turns off some Microsoft promotional content
-Result: Cleaner, less distracting UI.
-"@
+    "Safe" = "Safe Debloat: Removes obvious junk apps."
+    "Recommended" = "Recommended Debloat: Removes more built-in apps."
+    "Aggressive" = "Aggressive Debloat: Removes everything possible."
 }
 
-# Tweaks
+# ============================
+# TWEAK DESCRIPTIONS
+# ============================
 $global:TweakDescriptions = @{
-    "DarkMode" = @"
-Forces Windows into full dark mode:
-- Dark apps and system UI
-- Dark taskbar and settings
-Benefits: Less eye strain and a modern look.
-"@
-
-    "DisableAnimations" = @"
-Disables Windows UI animations:
-- Window minimize/maximize animations
-- Taskbar and menu fade effects
-Benefits: Snappier feel, lower input latency, better on low-end hardware.
-"@
-
-    "HighPerfPower" = @"
-Enables the High Performance power plan:
-- Keeps CPU at higher clocks
-- Reduces latency spikes
-- Improves gaming and heavy workload performance
-Best for desktops and plugged-in laptops.
-"@
+    "DarkMode" = "Forces Windows into dark mode."
+    "DisableAnimations" = "Disables UI animations."
+    "HighPerfPower" = "Enables High Performance power plan."
 }
 
-# Latency / Network
+# ============================
+# LATENCY DESCRIPTIONS
+# ============================
 $global:LatencyDescriptions = @{
-    "Latency" = @"
-Latency (ping) - time for a packet to go to the server and back:
-- Measured in milliseconds (ms)
-- Lower is better
-- Under 40 ms: excellent for gaming
-- 40-80 ms: good
-- 80-120 ms: playable but not ideal
-- 120+ ms: noticeable delay
-"@
-
-    "Jitter" = @"
-Jitter - variation in latency between packets:
-- Measures how consistent your connection is
-- Low jitter = stable connection
-- High jitter = stutter, rubber-banding in games
-"@
-
-    "PacketLoss" = @"
-Packet loss - percentage of packets that never arrive:
-- 0-1%: excellent
-- 1-3%: usually okay
-- 3-5%: noticeable issues
-- 5%+: bad for gaming and voice chat
-"@
-
-    "Rating" = @"
-Connection rating - summary based on latency, jitter, and packet loss:
-- Excellent: great for gaming and streaming
-- Good: fine for most games
-- Okay: usable, but not ideal for competitive gaming
-- Bad: unstable for real-time use
-"@
+    "Latency" = "Latency (ping) explanation."
+    "Jitter" = "Jitter explanation."
+    "PacketLoss" = "Packet loss explanation."
+    "Rating" = "Connection rating explanation."
 }
-
-# ============================================
-#  APPS MAP (DISPLAY NAME -> WINGET ID)
-# ============================================
+# ============================
+# APP MAP (BIG CATALOG)
+# ============================
 $global:AppMap = @{
-    "7-Zip"              = "7zip.7zip"
+
+    # Browsers
     "Google Chrome"      = "Google.Chrome"
+    "Microsoft Edge"     = "Microsoft.Edge"
+    "Brave"              = "Brave.Brave"
+    "Mozilla Firefox"    = "Mozilla.Firefox"
+
+    # Dev
     "Visual Studio Code" = "Microsoft.VisualStudioCode"
-    "Discord"            = "Discord.Discord"
+    "Visual Studio 2022 Community" = "Microsoft.VisualStudio.2022.Community"
+    "Git"                = "Git.Git"
+    "Node.js LTS"        = "OpenJS.NodeJS.LTS"
+    "Python 3"           = "Python.Python.3"
+
+    # Gaming
     "Steam"              = "Valve.Steam"
+    "Epic Games Launcher"= "EpicGames.EpicGamesLauncher"
+    "GOG Galaxy"         = "GOG.Galaxy"
+    "Discord"            = "Discord.Discord"
+
+    # Media
+    "VLC"                = "VideoLAN.VLC"
+    "Spotify"            = "Spotify.Spotify"
+    "OBS Studio"         = "OBSProject.OBSStudio"
+    "MPV"                = "mpv.net.mpv.net"
+
+    # Tools
+    "7-Zip"              = "7zip.7zip"
+    "WinRAR"             = "RARLab.WinRAR"
+    "Notepad++"          = "Notepad++.Notepad++"
+    "Everything Search"  = "voidtools.Everything"
+    "HWInfo"             = "REALiX.HWiNFO"
+    "CPU-Z"              = "CPUID.CPU-Z"
+    "GPU-Z"              = "TechPowerUp.GPU-Z"
 }
 
-# ============================================
-#  SERVICES / TASKS DEFINITIONS (Performance Mode)
-# ============================================
+# ============================
+# SERVICE GROUPS
+# ============================
 $global:ServiceItems = @(
     [pscustomobject]@{
-        Key         = "XboxServices"
-        DisplayName = "Disable Xbox Services"
-        Description = @"
-Disables Xbox-related services:
-- Xbox Accessory Management
-- Xbox Live Auth / Game Save
-- Xbox Networking
-Improves performance on systems that do not use Xbox features.
-"@
-        Services    = @(
-            "XblAuthManager",
-            "XblGameSave",
-            "XboxGipSvc",
-            "XboxNetApiSvc"
-        )
+        Key="Xbox"; DisplayName="Disable Xbox Services";
+        Description="Disables Xbox services."; Services=@("XblAuthManager","XblGameSave","XboxGipSvc","XboxNetApiSvc")
     }
     [pscustomobject]@{
-        Key         = "DiagTracking"
-        DisplayName = "Disable Diagnostics Tracking"
-        Description = @"
-Disables diagnostics tracking services:
-- Connected User Experiences and Telemetry (DiagTrack)
-- dmwappushservice
-Reduces background telemetry and data collection.
-"@
-        Services    = @(
-            "DiagTrack",
-            "dmwappushservice"
-        )
+        Key="Search"; DisplayName="Disable Windows Search";
+        Description="Disables indexing."; Services=@("WSearch")
     }
     [pscustomobject]@{
-        Key         = "PrintSpooler"
-        DisplayName = "Disable Print Spooler"
-        Description = @"
-Disables the Print Spooler service:
-- Stops printer management and print jobs
-Improves security and performance on systems that never print.
-"@
-        Services    = @(
-            "Spooler"
-        )
+        Key="Updates"; DisplayName="Disable Windows Update";
+        Description="Stops Windows Update."; Services=@("wuauserv","UsoSvc","BITS")
     }
     [pscustomobject]@{
-        Key         = "RetailDemo"
-        DisplayName = "Disable Retail Demo Services"
-        Description = @"
-Disables retail/demo-related services:
-- RetailDemo
-Useful for non-store, personal systems.
-"@
-        Services    = @(
-            "RetailDemo"
-        )
+        Key="OneDrive"; DisplayName="Disable OneDrive";
+        Description="Stops OneDrive sync."; Services=@("OneSyncSvc","OneDrive")
     }
     [pscustomobject]@{
-        Key         = "MapsServices"
-        DisplayName = "Disable Maps Services"
-        Description = @"
-Disables offline maps and related services:
-- MapsBroker
-Reduces background activity for maps/location features.
-"@
-        Services    = @(
-            "MapsBroker"
-        )
+        Key="Bluetooth"; DisplayName="Disable Bluetooth";
+        Description="Stops Bluetooth services."; Services=@("bthserv")
     }
 )
 
+# ============================
+# TASK GROUPS
+# ============================
 $global:TaskItems = @(
     [pscustomobject]@{
-        Key         = "CEIP"
-        DisplayName = "Disable CEIP (Customer Experience Improvement Program)"
-        Description = @"
-Disables Customer Experience Improvement Program tasks:
-- Reduces background telemetry and reporting.
-"@
-        TaskPaths   = @(
-            "\Microsoft\Windows\Customer Experience Improvement Program\Consolidator",
-            "\Microsoft\Windows\Customer Experience Improvement Program\UsbCeip",
-            "\Microsoft\Windows\Customer Experience Improvement Program\KernelCeipTask"
+        Key="DefenderTasks"; DisplayName="Disable Defender Tasks";
+        Description="Stops Defender scheduled tasks.";
+        TaskPaths=@(
+            "\Microsoft\Windows\Windows Defender\Windows Defender Cache Maintenance",
+            "\Microsoft\Windows\Windows Defender\Windows Defender Cleanup",
+            "\Microsoft\Windows\Windows Defender\Windows Defender Scheduled Scan",
+            "\Microsoft\Windows\Windows Defender\Windows Defender Verification"
         )
     }
     [pscustomobject]@{
-        Key         = "AppExperience"
-        DisplayName = "Disable Application Experience Tasks"
-        Description = @"
-Disables Application Experience tasks:
-- Reduces background compatibility and telemetry checks.
-"@
-        TaskPaths   = @(
-            "\Microsoft\Windows\Application Experience\Microsoft Compatibility Appraiser",
-            "\Microsoft\Windows\Application Experience\ProgramDataUpdater"
-        )
-    }
-    [pscustomobject]@{
-        Key         = "MediaCenter"
-        DisplayName = "Disable Media Center Tasks"
-        Description = @"
-Disables legacy Media Center tasks:
-- Safe on modern systems that do not use Media Center.
-"@
-        TaskPaths   = @(
-            "\Microsoft\Windows\Media Center\*"
-        )
-    }
-    [pscustomobject]@{
-        Key         = "MapsTasks"
-        DisplayName = "Disable Maps Tasks"
-        Description = @"
-Disables Maps-related scheduled tasks:
-- Reduces background map data updates.
-"@
-        TaskPaths   = @(
-            "\Microsoft\Windows\Maps\MapsUpdateTask",
-            "\Microsoft\Windows\Maps\MapsToastTask"
+        Key="UpdateTasks"; DisplayName="Disable Update Tasks";
+        Description="Stops Windows Update tasks.";
+        TaskPaths=@(
+            "\Microsoft\Windows\WindowsUpdate\Scheduled Start",
+            "\Microsoft\Windows\WindowsUpdate\Automatic App Update"
         )
     }
 )
+# ============================
+# XAML GUI (FULL WINDOW)
+# ============================
 
-# ============================================
-#  XAML UI (WPF)
-# ============================================
 Add-Type -AssemblyName PresentationFramework
 
 $xaml = @"
@@ -306,6 +167,7 @@ $xaml = @"
         WindowStartupLocation="CenterScreen"
         Background="#1E1E1E" Foreground="#F0F0F0"
         FontFamily="Segoe UI">
+
     <Window.Resources>
         <Style TargetType="Button">
             <Setter Property="Margin" Value="6"/>
@@ -315,37 +177,44 @@ $xaml = @"
             <Setter Property="BorderBrush" Value="#5A5A5A"/>
             <Setter Property="BorderThickness" Value="1"/>
         </Style>
+
         <Style TargetType="TextBox">
             <Setter Property="Margin" Value="6"/>
             <Setter Property="Background" Value="#2A2A2A"/>
             <Setter Property="Foreground" Value="#F0F0F0"/>
             <Setter Property="BorderBrush" Value="#555555"/>
         </Style>
+
         <Style TargetType="CheckBox">
             <Setter Property="Margin" Value="4,4,4,4"/>
         </Style>
+
         <Style TargetType="TabItem">
             <Setter Property="Margin" Value="0,0,4,0"/>
         </Style>
     </Window.Resources>
 
     <DockPanel>
+
+        <!-- TOP BAR -->
         <Border DockPanel.Dock="Top" Background="#252526" Height="48">
             <Grid Margin="10,0">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
+
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                     <TextBlock Text="Yusuf Mullas WinUtil"
                                FontSize="20"
                                FontWeight="Bold"
                                Margin="4,0,10,0"/>
-                    <TextBlock Text="Ultra Ultimate"
+                    <TextBlock Text="Ultra Ultimate Edition"
                                FontSize="12"
                                Foreground="#AAAAAA"
                                VerticalAlignment="Center"/>
                 </StackPanel>
+
                 <TextBlock Grid.Column="1"
                            Text="{Binding VersionText}"
                            VerticalAlignment="Center"
@@ -353,14 +222,19 @@ $xaml = @"
             </Grid>
         </Border>
 
+        <!-- MAIN CONTENT -->
         <Grid Margin="8">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="3*"/>
                 <ColumnDefinition Width="2*"/>
             </Grid.ColumnDefinitions>
 
+            <!-- LEFT SIDE: TABS -->
             <TabControl Grid.Column="0" Margin="0,0,8,0">
-                <!-- Apps Tab -->
+
+                <!-- ============================
+                     APPS TAB
+                ============================ -->
                 <TabItem Header="Apps">
                     <Grid Margin="10">
                         <Grid.RowDefinitions>
@@ -378,11 +252,41 @@ $xaml = @"
                                  Grid.Row="1"
                                  Background="#2A2A2A"
                                  BorderBrush="#444444">
-                            <ListBoxItem Content="7-Zip"/>
+
+                            <ListBoxItem Content="--- Browsers ---" IsEnabled="False"/>
                             <ListBoxItem Content="Google Chrome"/>
+                            <ListBoxItem Content="Microsoft Edge"/>
+                            <ListBoxItem Content="Brave"/>
+                            <ListBoxItem Content="Mozilla Firefox"/>
+
+                            <ListBoxItem Content="--- Dev ---" IsEnabled="False"/>
                             <ListBoxItem Content="Visual Studio Code"/>
-                            <ListBoxItem Content="Discord"/>
+                            <ListBoxItem Content="Visual Studio 2022 Community"/>
+                            <ListBoxItem Content="Git"/>
+                            <ListBoxItem Content="Node.js LTS"/>
+                            <ListBoxItem Content="Python 3"/>
+
+                            <ListBoxItem Content="--- Gaming ---" IsEnabled="False"/>
                             <ListBoxItem Content="Steam"/>
+                            <ListBoxItem Content="Epic Games Launcher"/>
+                            <ListBoxItem Content="GOG Galaxy"/>
+                            <ListBoxItem Content="Discord"/>
+
+                            <ListBoxItem Content="--- Media ---" IsEnabled="False"/>
+                            <ListBoxItem Content="VLC"/>
+                            <ListBoxItem Content="Spotify"/>
+                            <ListBoxItem Content="OBS Studio"/>
+                            <ListBoxItem Content="MPV"/>
+
+                            <ListBoxItem Content="--- Tools ---" IsEnabled="False"/>
+                            <ListBoxItem Content="7-Zip"/>
+                            <ListBoxItem Content="WinRAR"/>
+                            <ListBoxItem Content="Notepad++"/>
+                            <ListBoxItem Content="Everything Search"/>
+                            <ListBoxItem Content="HWInfo"/>
+                            <ListBoxItem Content="CPU-Z"/>
+                            <ListBoxItem Content="GPU-Z"/>
+
                         </ListBox>
 
                         <StackPanel Grid.Row="2"
@@ -395,24 +299,27 @@ $xaml = @"
                     </Grid>
                 </TabItem>
 
-                <!-- Debloat Tab -->
+                <!-- ============================
+                     DEBLOAT TAB
+                ============================ -->
                 <TabItem Header="Debloat">
                     <StackPanel Margin="10">
                         <TextBlock Text="Debloat Options"
                                    FontSize="18"
                                    FontWeight="SemiBold"
                                    Margin="0,0,0,8"/>
-                        <TextBlock Text="Select what you want to remove or disable. These focus on clutter, telemetry, and suggestions."
+
+                        <TextBlock Text="Choose what to remove or disable."
                                    TextWrapping="Wrap"
                                    Foreground="#BBBBBB"
                                    Margin="0,0,0,10"/>
 
                         <CheckBox x:Name="RemoveBloatwareChk"
-                                  Content="Remove common OEM / Microsoft bloatware"/>
+                                  Content="Aggressive Debloat (Safe + Recommended + Extra)"/>
                         <CheckBox x:Name="DisableTelemetryChk"
-                                  Content="Disable telemetry and data collection"/>
+                                  Content="Disable Telemetry"/>
                         <CheckBox x:Name="DisableSuggestionsChk"
-                                  Content="Disable Start menu / lock screen suggestions"/>
+                                  Content="Disable Suggestions"/>
 
                         <StackPanel Orientation="Horizontal"
                                     HorizontalAlignment="Right"
@@ -422,24 +329,22 @@ $xaml = @"
                     </StackPanel>
                 </TabItem>
 
-                <!-- Tweaks Tab -->
+                <!-- ============================
+                     TWEAKS TAB
+                ============================ -->
                 <TabItem Header="Tweaks">
                     <StackPanel Margin="10">
                         <TextBlock Text="System Tweaks"
                                    FontSize="18"
                                    FontWeight="SemiBold"
                                    Margin="0,0,0,8"/>
-                        <TextBlock Text="Performance and visual tweaks. These affect how Windows looks and behaves."
-                                   TextWrapping="Wrap"
-                                   Foreground="#BBBBBB"
-                                   Margin="0,0,0,10"/>
 
                         <CheckBox x:Name="EnableDarkModeChk"
                                   Content="Force Dark Mode"/>
                         <CheckBox x:Name="DisableAnimationsChk"
-                                  Content="Disable UI animations for performance"/>
+                                  Content="Disable UI Animations"/>
                         <CheckBox x:Name="SetHighPerfPowerChk"
-                                  Content="Set High Performance power plan"/>
+                                  Content="High Performance Power Plan"/>
 
                         <StackPanel Orientation="Horizontal"
                                     HorizontalAlignment="Right"
@@ -449,17 +354,15 @@ $xaml = @"
                     </StackPanel>
                 </TabItem>
 
-                <!-- Backup Tab -->
+                <!-- ============================
+                     BACKUP TAB
+                ============================ -->
                 <TabItem Header="Backup">
                     <StackPanel Margin="10">
-                        <TextBlock Text="Backup &amp; Restore"
+                        <TextBlock Text="Backup & Restore"
                                    FontSize="18"
                                    FontWeight="SemiBold"
                                    Margin="0,0,0,8"/>
-                        <TextBlock Text="Save or load a basic configuration snapshot for this utility."
-                                   TextWrapping="Wrap"
-                                   Foreground="#BBBBBB"
-                                   Margin="0,0,0,10"/>
 
                         <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
                             <Button x:Name="BackupConfigBtn" Content="Backup Config"/>
@@ -472,7 +375,9 @@ $xaml = @"
                     </StackPanel>
                 </TabItem>
 
-                <!-- Latency / Network Tab -->
+                <!-- ============================
+                     LATENCY TAB
+                ============================ -->
                 <TabItem Header="Latency">
                     <Grid Margin="10">
                         <Grid.RowDefinitions>
@@ -481,7 +386,7 @@ $xaml = @"
                             <RowDefinition Height="*"/>
                         </Grid.RowDefinitions>
 
-                        <TextBlock Text="Latency &amp; Network"
+                        <TextBlock Text="Latency & Network"
                                    FontSize="18"
                                    FontWeight="SemiBold"
                                    Margin="0,0,0,8"/>
@@ -512,20 +417,23 @@ $xaml = @"
                     </Grid>
                 </TabItem>
 
-                <!-- Services Tab -->
+                <!-- ============================
+                     SERVICES TAB
+                ============================ -->
                 <TabItem Header="Services">
                     <Grid Margin="10">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="2*"/>
                             <ColumnDefinition Width="3*"/>
                         </Grid.ColumnDefinitions>
+
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="*"/>
                             <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
 
-                        <TextBlock Text="Services (Performance Mode)"
+                        <TextBlock Text="Services (Aggressive Mode)"
                                    FontSize="18"
                                    FontWeight="SemiBold"
                                    Margin="0,0,0,8"/>
@@ -558,20 +466,23 @@ $xaml = @"
                     </Grid>
                 </TabItem>
 
-                <!-- Tasks Tab -->
+                <!-- ============================
+                     TASKS TAB
+                ============================ -->
                 <TabItem Header="Tasks">
                     <Grid Margin="10">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="2*"/>
                             <ColumnDefinition Width="3*"/>
                         </Grid.ColumnDefinitions>
+
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="*"/>
                             <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
 
-                        <TextBlock Text="Scheduled Tasks (Performance Mode)"
+                        <TextBlock Text="Scheduled Tasks (Aggressive Mode)"
                                    FontSize="18"
                                    FontWeight="SemiBold"
                                    Margin="0,0,0,8"/>
@@ -604,17 +515,15 @@ $xaml = @"
                     </Grid>
                 </TabItem>
 
-                <!-- Profiles Tab -->
+                <!-- ============================
+                     PROFILES TAB
+                ============================ -->
                 <TabItem Header="Profiles">
                     <StackPanel Margin="10">
                         <TextBlock Text="Profiles"
                                    FontSize="18"
                                    FontWeight="SemiBold"
                                    Margin="0,0,0,8"/>
-                        <TextBlock Text="One-click presets that apply multiple tweaks, debloat options, services, and tasks."
-                                   TextWrapping="Wrap"
-                                   Foreground="#BBBBBB"
-                                   Margin="0,0,0,10"/>
 
                         <StackPanel Orientation="Vertical" Margin="0,4,0,0">
                             <Button x:Name="GamingProfileBtn" Content="Apply Gaming Mode" Margin="0,0,0,4"/>
@@ -624,8 +533,10 @@ $xaml = @"
                         </StackPanel>
                     </StackPanel>
                 </TabItem>
+
             </TabControl>
 
+            <!-- RIGHT SIDE: INFO PANEL -->
             <Border Grid.Column="1"
                     Background="#202020"
                     BorderBrush="#444444"
@@ -642,10 +553,14 @@ $xaml = @"
                                Foreground="#BBBBBB"/>
                 </StackPanel>
             </Border>
+
         </Grid>
     </DockPanel>
 </Window>
 "@
+# ============================
+# LOAD XAML + BIND CONTROLS
+# ============================
 
 [xml]$xamlXml = $xaml
 $reader = New-Object System.Xml.XmlNodeReader $xamlXml
@@ -655,7 +570,7 @@ $window.DataContext = [pscustomobject]@{
     VersionText = "v$($WinUtil.Version)"
 }
 
-# Bind controls
+# Controls
 $AppsList            = $window.FindName("AppsList")
 $InstallSelectedApps = $window.FindName("InstallSelectedAppsBtn")
 $RefreshAppsBtn      = $window.FindName("RefreshAppsBtn")
@@ -678,28 +593,32 @@ $LatencyHostTxt        = $window.FindName("LatencyHostTxt")
 $TestLatencyBtn        = $window.FindName("TestLatencyBtn")
 $LatencyOutputTxt      = $window.FindName("LatencyOutputTxt")
 
-$ServicesList    = $window.FindName("ServicesList")
-$ServiceDescBox  = $window.FindName("ServiceDescBox")
-$ApplyServicesBtn = $window.FindName("ApplyServicesBtn")
+$ServicesList          = $window.FindName("ServicesList")
+$ServiceDescBox        = $window.FindName("ServiceDescBox")
+$ApplyServicesBtn      = $window.FindName("ApplyServicesBtn")
 
-$TasksList       = $window.FindName("TasksList")
-$TaskDescBox     = $window.FindName("TaskDescBox")
-$ApplyTasksBtn   = $window.FindName("ApplyTasksBtn")
+$TasksList             = $window.FindName("TasksList")
+$TaskDescBox           = $window.FindName("TaskDescBox")
+$ApplyTasksBtn         = $window.FindName("ApplyTasksBtn")
 
 $GamingProfileBtn      = $window.FindName("GamingProfileBtn")
 $StreamingProfileBtn   = $window.FindName("StreamingProfileBtn")
 $WorkProfileBtn        = $window.FindName("WorkProfileBtn")
 $PerformanceProfileBtn = $window.FindName("PerformanceProfileBtn")
-# ============================================
-#  CORE LOGIC
-# ============================================
 
-# Apps Installer
+# ============================
+# APP INSTALLER LOGIC
+# ============================
+
 function Install-SelectedApps {
     param(
         [System.Windows.Controls.ListBox]$ListBox
     )
-    $selected = $ListBox.SelectedItems | ForEach-Object { $_.Content }
+
+    $selected = $ListBox.SelectedItems |
+        ForEach-Object { $_.Content } |
+        Where-Object { $_ -notlike "---*" }
+
     if (-not $selected) {
         [System.Windows.MessageBox]::Show("No apps selected.", "Yusuf WinUtil")
         return
@@ -724,36 +643,84 @@ function Install-SelectedApps {
         Start-Process winget -ArgumentList "install --id `"$id`" -e --source winget --accept-source-agreements --accept-package-agreements" -NoNewWindow
     }
 
-    [System.Windows.MessageBox]::Show("Install commands issued. Check console for details and descriptions.", "Yusuf WinUtil")
+    [System.Windows.MessageBox]::Show("Install commands issued. Check console for details.", "Yusuf WinUtil")
 }
+# ============================
+# DEBLOAT HELPERS
+# ============================
 
-# Debloat
-function Remove-CommonBloat {
-    Write-Host "Removing common bloatware Appx packages..." -ForegroundColor Yellow
+function Remove-Bloat-Safe {
+    Write-Host "[Debloat: Safe] Removing basic junk..." -ForegroundColor Cyan
 
-    $bloatList = @(
-        "*XboxApp*",
-        "*XboxGamingOverlay*",
-        "*Microsoft.ZuneMusic*",
-        "*Microsoft.ZuneVideo*",
-        "*Microsoft.SkypeApp*",
+    $patterns = @(
         "*Microsoft.GetHelp*",
         "*Microsoft.Getstarted*",
         "*Microsoft.Microsoft3DViewer*",
-        "*Microsoft.MicrosoftOfficeHub*",
         "*Microsoft.MicrosoftSolitaireCollection*",
+        "*Microsoft.SkypeApp*"
+    )
+
+    foreach ($p in $patterns) {
+        Get-AppxPackage -Name $p -AllUsers | Remove-AppxPackage -ErrorAction SilentlyContinue
+        Get-AppxProvisionedPackage -Online |
+            Where-Object DisplayName -Like $p |
+            Remove-AppxProvisionedPackage -Online -ErrorAction SilentlyContinue
+    }
+}
+
+function Remove-Bloat-Recommended {
+    Write-Host "[Debloat: Recommended] Removing more built-in apps..." -ForegroundColor Cyan
+
+    Remove-Bloat-Safe
+
+    $patterns = @(
+        "*XboxApp*",
+        "*XboxGamingOverlay*",
+        "*Microsoft.Xbox*",
+        "*Microsoft.ZuneMusic*",
+        "*Microsoft.ZuneVideo*",
+        "*Microsoft.MicrosoftOfficeHub*",
         "*Microsoft.People*",
         "*Microsoft.MicrosoftStickyNotes*"
     )
 
-    foreach ($pattern in $bloatList) {
-        Get-AppxPackage -Name $pattern -AllUsers | Remove-AppxPackage -ErrorAction SilentlyContinue
-        Get-AppxProvisionedPackage -Online | Where-Object DisplayName -Like $pattern | Remove-AppxProvisionedPackage -Online -ErrorAction SilentlyContinue
+    foreach ($p in $patterns) {
+        Get-AppxPackage -Name $p -AllUsers | Remove-AppxPackage -ErrorAction SilentlyContinue
+        Get-AppxProvisionedPackage -Online |
+            Where-Object DisplayName -Like $p |
+            Remove-AppxProvisionedPackage -Online -ErrorAction SilentlyContinue
     }
 }
 
+function Remove-Bloat-Aggressive {
+    Write-Host "[Debloat: Aggressive] Removing EVERYTHING possible..." -ForegroundColor Red
+
+    Remove-Bloat-Recommended
+
+    $patterns = @(
+        "*Microsoft.BingNews*",
+        "*Microsoft.BingWeather*",
+        "*Microsoft.MicrosoftNews*",
+        "*Microsoft.Todos*",
+        "*Microsoft.YourPhone*",
+        "*Microsoft.WindowsMaps*",
+        "*Microsoft.WindowsFeedbackHub*"
+    )
+
+    foreach ($p in $patterns) {
+        Get-AppxPackage -Name $p -AllUsers | Remove-AppxPackage -ErrorAction SilentlyContinue
+        Get-AppxProvisionedPackage -Online |
+            Where-Object DisplayName -Like $p |
+            Remove-AppxProvisionedPackage -Online -ErrorAction SilentlyContinue
+    }
+}
+
+# ============================
+# TELEMETRY DISABLE
+# ============================
+
 function Disable-Telemetry {
-    Write-Host "Disabling telemetry and related services..." -ForegroundColor Yellow
+    Write-Host "[Debloat: Disable Telemetry]" -ForegroundColor Yellow
 
     $services = @(
         "DiagTrack",
@@ -768,11 +735,16 @@ function Disable-Telemetry {
     }
 
     New-Item -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\DataCollection" -Force | Out-Null
-    Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\DataCollection" -Name "AllowTelemetry" -Type DWord -Value 0 -ErrorAction SilentlyContinue
+    Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\DataCollection" `
+        -Name "AllowTelemetry" -Type DWord -Value 0 -ErrorAction SilentlyContinue
 }
 
+# ============================
+# SUGGESTIONS DISABLE
+# ============================
+
 function Disable-Suggestions {
-    Write-Host "Disabling suggestions and consumer features..." -ForegroundColor Yellow
+    Write-Host "[Debloat: Disable Suggestions]" -ForegroundColor Yellow
 
     $paths = @(
         "HKCU:\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager",
@@ -783,9 +755,16 @@ function Disable-Suggestions {
         New-Item -Path $p -Force | Out-Null
     }
 
-    Set-ItemProperty "HKCU:\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" "SystemPaneSuggestionsEnabled" 0 -Type DWord -ErrorAction SilentlyContinue
-    Set-ItemProperty "HKLM:\SOFTWARE\Policies\Microsoft\Windows\CloudContent" "DisableConsumerFeatures" 1 -Type DWord -ErrorAction SilentlyContinue
+    Set-ItemProperty "HKCU:\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" `
+        "SystemPaneSuggestionsEnabled" 0 -Type DWord -ErrorAction SilentlyContinue
+
+    Set-ItemProperty "HKLM:\SOFTWARE\Policies\Microsoft\Windows\CloudContent" `
+        "DisableConsumerFeatures" 1 -Type DWord -ErrorAction SilentlyContinue
 }
+
+# ============================
+# RUN DEBLOAT (AGGRESSIVE MODE)
+# ============================
 
 function Run-Debloat {
     param(
@@ -796,60 +775,117 @@ function Run-Debloat {
 
     if ($RemoveBloatware) {
         Write-Host ""
-        Write-Host "[Debloat: Remove Bloatware]" -ForegroundColor Cyan
-        Write-Host $DebloatDescriptions["RemoveBloatware"]
-        Remove-CommonBloat
+        Write-Host "=== AGGRESSIVE DEBLOAT ===" -ForegroundColor Red
+        Write-Host $DebloatDescriptions["Aggressive"]
+        Remove-Bloat-Aggressive
     }
 
     if ($DisableTelemetry) {
         Write-Host ""
-        Write-Host "[Debloat: Disable Telemetry]" -ForegroundColor Cyan
-        Write-Host $DebloatDescriptions["DisableTelemetry"]
+        Write-Host "=== DISABLE TELEMETRY ===" -ForegroundColor Yellow
         Disable-Telemetry
     }
 
     if ($DisableSuggestions) {
         Write-Host ""
-        Write-Host "[Debloat: Disable Suggestions]" -ForegroundColor Cyan
-        Write-Host $DebloatDescriptions["DisableSuggestions"]
+        Write-Host "=== DISABLE SUGGESTIONS ===" -ForegroundColor Yellow
         Disable-Suggestions
     }
 
-    [System.Windows.MessageBox]::Show("Debloat operations completed. A reboot is recommended.", "Yusuf WinUtil")
+    [System.Windows.MessageBox]::Show("Aggressive debloat completed. Reboot strongly recommended.", "Yusuf WinUtil")
 }
+# ============================
+# TWEAKS: CORE
+# ============================
 
-# Tweaks
 function Set-DarkMode {
     Write-Host ""
-    Write-Host "[Dark Mode] Applying..." -ForegroundColor Cyan
-    Write-Host $TweakDescriptions["DarkMode"]
+    Write-Host "[Tweaks: Dark Mode]" -ForegroundColor Cyan
 
     $path = "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Themes\Personalize"
     New-Item -Path $path -Force | Out-Null
-    Set-ItemProperty -Path $path -Name "AppsUseLightTheme" -Type DWord -Value 0
-    Set-ItemProperty -Path $path -Name "SystemUsesLightTheme" -Type DWord -Value 0
+
+    Set-ItemProperty -Path $path -Name "AppsUseLightTheme" -Type DWord -Value 0 -ErrorAction SilentlyContinue
+    Set-ItemProperty -Path $path -Name "SystemUsesLightTheme" -Type DWord -Value 0 -ErrorAction SilentlyContinue
 }
 
 function Disable-UIAnimations {
     Write-Host ""
-    Write-Host "[Disable Animations] Applying..." -ForegroundColor Cyan
-    Write-Host $TweakDescriptions["DisableAnimations"]
+    Write-Host "[Tweaks: Disable Animations]" -ForegroundColor Cyan
 
     $regPath = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects"
     New-Item -Path $regPath -Force | Out-Null
-    Set-ItemProperty -Path $regPath -Name "VisualFXSetting" -Type DWord -Value 2
+    Set-ItemProperty -Path $regPath -Name "VisualFXSetting" -Type DWord -Value 2 -ErrorAction SilentlyContinue
 
     $advPath = "HKCU:\Control Panel\Desktop"
-    Set-ItemProperty -Path $advPath -Name "UserPreferencesMask" -Value ([byte[]](0x90,0x12,0x03,0x80,0x10,0x00,0x00,0x00))
+    Set-ItemProperty -Path $advPath -Name "UserPreferencesMask" -Value ([byte[]](0x90,0x12,0x03,0x80,0x10,0x00,0x00,0x00)) -ErrorAction SilentlyContinue
 }
 
 function Set-HighPerformancePlan {
     Write-Host ""
-    Write-Host "[High Performance Power Plan] Applying..." -ForegroundColor Cyan
-    Write-Host $TweakDescriptions["HighPerfPower"]
-
+    Write-Host "[Tweaks: High Performance Power Plan]" -ForegroundColor Cyan
     powercfg -setactive SCHEME_MIN
 }
+
+# ============================
+# TWEAKS: EXPLORER / TASKBAR / CONTEXT / PRIVACY / GAMING
+# ============================
+
+function Tweak-Explorer {
+    Write-Host ""
+    Write-Host "[Tweaks: Explorer]" -ForegroundColor Cyan
+
+    $path = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"
+    New-Item -Path $path -Force | Out-Null
+
+    Set-ItemProperty -Path $path -Name "Hidden" -Type DWord -Value 1 -ErrorAction SilentlyContinue
+    Set-ItemProperty -Path $path -Name "HideFileExt" -Type DWord -Value 0 -ErrorAction SilentlyContinue
+    Set-ItemProperty -Path $path -Name "ShowSuperHidden" -Type DWord -Value 1 -ErrorAction SilentlyContinue
+}
+
+function Tweak-Taskbar {
+    Write-Host ""
+    Write-Host "[Tweaks: Taskbar]" -ForegroundColor Cyan
+
+    $path = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"
+    New-Item -Path $path -Force | Out-Null
+
+    Set-ItemProperty -Path $path -Name "TaskbarSmallIcons" -Type DWord -Value 1 -ErrorAction SilentlyContinue
+}
+
+function Tweak-ContextMenu {
+    Write-Host ""
+    Write-Host "[Tweaks: Context Menu]" -ForegroundColor Cyan
+
+    $path = "HKCU:\Software\Classes\CLSID\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}\InprocServer32"
+    New-Item -Path $path -Force | Out-Null
+    Set-ItemProperty -Path $path -Name "(default)" -Value "" -ErrorAction SilentlyContinue
+}
+
+function Tweak-Privacy {
+    Write-Host ""
+    Write-Host "[Tweaks: Privacy]" -ForegroundColor Cyan
+
+    New-Item -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\AdvertisingInfo" -Force | Out-Null
+    Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\AdvertisingInfo" `
+        -Name "DisabledByGroupPolicy" -Type DWord -Value 1 -ErrorAction SilentlyContinue
+}
+
+function Tweak-Gaming {
+    Write-Host ""
+    Write-Host "[Tweaks: Gaming]" -ForegroundColor Cyan
+
+    New-Item -Path "HKCU:\System\GameConfigStore" -Force | Out-Null
+    Set-ItemProperty -Path "HKCU:\System\GameConfigStore" -Name "GameDVR_FSEBehaviorMode" -Type DWord -Value 2 -ErrorAction SilentlyContinue
+    Set-ItemProperty -Path "HKCU:\System\GameConfigStore" -Name "GameDVR_Enabled" -Type DWord -Value 0 -ErrorAction SilentlyContinue
+
+    New-Item -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\GameDVR" -Force | Out-Null
+    Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\GameDVR" -Name "AllowGameDVR" -Type DWord -Value 0 -ErrorAction SilentlyContinue
+}
+
+# ============================
+# APPLY TWEAKS (AGGRESSIVE)
+# ============================
 
 function Apply-Tweaks {
     param(
@@ -862,10 +898,18 @@ function Apply-Tweaks {
     if ($DisableAnimations){ Disable-UIAnimations }
     if ($HighPerfPower)    { Set-HighPerformancePlan }
 
-    [System.Windows.MessageBox]::Show("Tweaks applied. Check console for detailed descriptions.", "Yusuf WinUtil")
-}
+    Tweak-Explorer
+    Tweak-Taskbar
+    Tweak-ContextMenu
+    Tweak-Privacy
+    Tweak-Gaming
 
-# Backup / Restore
+    [System.Windows.MessageBox]::Show("Aggressive tweaks applied. Some require sign-out or reboot.", "Yusuf WinUtil")
+}
+# ============================
+# BACKUP / RESTORE
+# ============================
+
 function Backup-Config {
     param(
         [System.Windows.Controls.TextBlock]$StatusControl
@@ -896,7 +940,10 @@ function Restore-Config {
     $StatusControl.Text = "Backup loaded from $path (apply logic not yet implemented)"
 }
 
-# Latency / Network
+# ============================
+# LATENCY / NETWORK
+# ============================
+
 function Test-Latency {
     param(
         [string]$Host,
@@ -958,7 +1005,10 @@ function Test-Latency {
     }
 }
 
-# Services / Tasks helpers
+# ============================
+# SERVICES / TASKS ENGINE
+# ============================
+
 function Set-ServicesState {
     param(
         [string[]]$ServiceNames,
@@ -1053,182 +1103,98 @@ function Apply-TaskItem {
     Write-Host $Item.Description
     Set-TasksState -TaskPaths $Item.TaskPaths -State $State
 }
-# ============================================
-#  PROFILES
-# ============================================
+# ============================
+# PROFILES
+# ============================
 
-function Apply-ProfilePerformance {
+function Apply-GamingProfile {
     Write-Host ""
-    Write-Host "=== Applying PERFORMANCE MODE Profile ===" -ForegroundColor Magenta
+    Write-Host "=== GAMING PROFILE ===" -ForegroundColor Green
 
-    Disable-UIAnimations
-    Set-HighPerformancePlan
-    Set-DarkMode
+    Apply-Tweaks -DarkMode $true -DisableAnimations $true -HighPerfPower $true
 
-    Remove-CommonBloat
-    Disable-Suggestions
-    Disable-Telemetry
-
-    $perfServices = @(
-        "XboxServices",
-        "DiagTracking",
-        "RetailDemo",
-        "MapsServices",
-        "PrintSpooler"
-    )
-    foreach ($svcKey in $perfServices) {
-        $item = $ServiceItems | Where-Object { $_.Key -eq $svcKey }
-        if ($item) { Apply-ServiceItem -Item $item -State "Disable" }
+    $gamingServices = $ServiceItems | Where-Object { $_.Key -in @("Xbox","Search","Updates","OneDrive","Bluetooth") }
+    foreach ($item in $gamingServices) {
+        Apply-ServiceItem -Item $item -State "Disable"
     }
 
-    $perfTasks = @(
-        "CEIP",
-        "AppExperience",
-        "MediaCenter",
-        "MapsTasks"
-    )
-    foreach ($tskKey in $perfTasks) {
-        $item = $TaskItems | Where-Object { $_.Key -eq $tskKey }
-        if ($item) { Apply-TaskItem -Item $item -State "Disable" }
-    }
-
-    [System.Windows.MessageBox]::Show("Performance Mode applied.", "Yusuf WinUtil")
-}
-
-function Apply-ProfileGaming {
-    Write-Host ""
-    Write-Host "=== Applying GAMING MODE Profile ===" -ForegroundColor Magenta
-
-    Disable-UIAnimations
-    Set-HighPerformancePlan
-    Set-DarkMode
-
-    Remove-CommonBloat
-    Disable-Suggestions
-    Disable-Telemetry
-
-    $gamingServices = @(
-        "DiagTracking",
-        "RetailDemo",
-        "MapsServices"
-    )
-    foreach ($svcKey in $gamingServices) {
-        $item = $ServiceItems | Where-Object { $_.Key -eq $svcKey }
-        if ($item) { Apply-ServiceItem -Item $item -State "Disable" }
-    }
-
-    $gamingTasks = @(
-        "CEIP",
-        "AppExperience",
-        "MapsTasks"
-    )
-    foreach ($tskKey in $gamingTasks) {
-        $item = $TaskItems | Where-Object { $_.Key -eq $tskKey }
-        if ($item) { Apply-TaskItem -Item $item -State "Disable" }
+    $gamingTasks = $TaskItems | Where-Object { $_.Key -in @("DefenderTasks","UpdateTasks") }
+    foreach ($item in $gamingTasks) {
+        Apply-TaskItem -Item $item -State "Disable"
     }
 
     [System.Windows.MessageBox]::Show("Gaming Mode applied.", "Yusuf WinUtil")
 }
 
-function Apply-ProfileStreaming {
+function Apply-StreamingProfile {
     Write-Host ""
-    Write-Host "=== Applying STREAMING MODE Profile ===" -ForegroundColor Magenta
+    Write-Host "=== STREAMING PROFILE ===" -ForegroundColor Green
 
-    Set-HighPerformancePlan
-    Set-DarkMode
-    Disable-UIAnimations
+    Apply-Tweaks -DarkMode $true -DisableAnimations $true -HighPerfPower $true
 
-    Remove-CommonBloat
-    Disable-Suggestions
-    Disable-Telemetry
-
-    $streamServices = @(
-        "DiagTracking",
-        "RetailDemo",
-        "MapsServices"
-    )
-    foreach ($svcKey in $streamServices) {
-        $item = $ServiceItems | Where-Object { $_.Key -eq $svcKey }
-        if ($item) { Apply-ServiceItem -Item $item -State "Disable" }
+    $streamServices = $ServiceItems | Where-Object { $_.Key -in @("Search","Updates","OneDrive") }
+    foreach ($item in $streamServices) {
+        Apply-ServiceItem -Item $item -State "Disable"
     }
 
-    $streamTasks = @(
-        "CEIP",
-        "AppExperience",
-        "MapsTasks"
-    )
-    foreach ($tskKey in $streamTasks) {
-        $item = $TaskItems | Where-Object { $_.Key -eq $tskKey }
-        if ($item) { Apply-TaskItem -Item $item -State "Disable" }
+    $streamTasks = $TaskItems | Where-Object { $_.Key -in @("DefenderTasks","UpdateTasks") }
+    foreach ($item in $streamTasks) {
+        Apply-TaskItem -Item $item -State "Disable"
     }
 
     [System.Windows.MessageBox]::Show("Streaming Mode applied.", "Yusuf WinUtil")
 }
 
-function Apply-ProfileWork {
+function Apply-WorkProfile {
     Write-Host ""
-    Write-Host "=== Applying WORK MODE Profile ===" -ForegroundColor Magenta
+    Write-Host "=== WORK PROFILE ===" -ForegroundColor Green
 
-    Set-DarkMode
-    Set-HighPerformancePlan
+    Apply-Tweaks -DarkMode $true -DisableAnimations $false -HighPerfPower $true
 
-    Remove-CommonBloat
-    Disable-Suggestions
-    Disable-Telemetry
-
-    $workServices = @(
-        "DiagTracking",
-        "RetailDemo",
-        "MapsServices"
-    )
-    foreach ($svcKey in $workServices) {
-        $item = $ServiceItems | Where-Object { $_.Key -eq $svcKey }
-        if ($item) { Apply-ServiceItem -Item $item -State "Disable" }
-    }
-
-    $workTasks = @(
-        "CEIP",
-        "AppExperience",
-        "MapsTasks"
-    )
-    foreach ($tskKey in $workTasks) {
-        $item = $TaskItems | Where-Object { $_.Key -eq $tskKey }
-        if ($item) { Apply-TaskItem -Item $item -State "Disable" }
+    $workServices = $ServiceItems | Where-Object { $_.Key -in @("Search","OneDrive") }
+    foreach ($item in $workServices) {
+        Apply-ServiceItem -Item $item -State "Disable"
     }
 
     [System.Windows.MessageBox]::Show("Work Mode applied.", "Yusuf WinUtil")
 }
 
-# ============================================
-#  POPULATE LISTS
-# ============================================
-$ServiceItems | ForEach-Object { [void]$ServicesList.Items.Add($_) }
-$TaskItems    | ForEach-Object { [void]$TasksList.Items.Add($_) }
+function Apply-PerformanceProfile {
+    Write-Host ""
+    Write-Host "=== PERFORMANCE PROFILE ===" -ForegroundColor Green
 
-$ServicesList.Add_SelectionChanged({
-    $item = $ServicesList.SelectedItem
-    if ($item) {
-        $ServiceDescBox.Text = $item.Description
+    Apply-Tweaks -DarkMode $true -DisableAnimations $true -HighPerfPower $true
+
+    foreach ($item in $ServiceItems) {
+        Apply-ServiceItem -Item $item -State "Disable"
     }
-})
-
-$TasksList.Add_SelectionChanged({
-    $item = $TasksList.SelectedItem
-    if ($item) {
-        $TaskDescBox.Text = $item.Description
+    foreach ($item in $TaskItems) {
+        Apply-TaskItem -Item $item -State "Disable"
     }
-})
 
-if ($ServicesList.Items.Count -gt 0) {
+    [System.Windows.MessageBox]::Show("Performance Mode applied (very aggressive).", "Yusuf WinUtil")
+}
+
+# ============================
+# POPULATE SERVICES / TASKS LISTS
+# ============================
+
+$ServicesList.ItemsSource = $ServiceItems
+if ($ServiceItems.Count -gt 0) {
     $ServicesList.SelectedIndex = 0
-}
-if ($TasksList.Items.Count -gt 0) {
-    $TasksList.SelectedIndex = 0
+    $ServiceDescBox.Text = $ServiceItems[0].Description
 }
 
-# ============================================
-#  EVENT WIRING
-# ============================================
+$TasksList.ItemsSource = $TaskItems
+if ($TaskItems.Count -gt 0) {
+    $TasksList.SelectedIndex = 0
+    $TaskDescBox.Text = $TaskItems[0].Description
+}
+
+# ============================
+# EVENT WIRING
+# ============================
+
 $InstallSelectedApps.Add_Click({
     Install-SelectedApps -ListBox $AppsList
 })
@@ -1261,11 +1227,24 @@ $TestLatencyBtn.Add_Click({
     Test-Latency -Host $LatencyHostTxt.Text -OutputControl $LatencyOutputTxt
 })
 
+$ServicesList.Add_SelectionChanged({
+    $item = $ServicesList.SelectedItem
+    if ($item) {
+        $ServiceDescBox.Text = $item.Description
+    }
+})
+
+$TasksList.Add_SelectionChanged({
+    $item = $TasksList.SelectedItem
+    if ($item) {
+        $TaskDescBox.Text = $item.Description
+    }
+})
+
 $ApplyServicesBtn.Add_Click({
     $item = $ServicesList.SelectedItem
     if ($item) {
         Apply-ServiceItem -Item $item -State "Disable"
-        [System.Windows.MessageBox]::Show("Service group applied (disabled). Check console for details.", "Yusuf WinUtil")
     }
 })
 
@@ -1273,27 +1252,27 @@ $ApplyTasksBtn.Add_Click({
     $item = $TasksList.SelectedItem
     if ($item) {
         Apply-TaskItem -Item $item -State "Disable"
-        [System.Windows.MessageBox]::Show("Task group applied (disabled). Check console for details.", "Yusuf WinUtil")
     }
 })
 
 $GamingProfileBtn.Add_Click({
-    Apply-ProfileGaming
+    Apply-GamingProfile
 })
 
 $StreamingProfileBtn.Add_Click({
-    Apply-ProfileStreaming
+    Apply-StreamingProfile
 })
 
 $WorkProfileBtn.Add_Click({
-    Apply-ProfileWork
+    Apply-WorkProfile
 })
 
 $PerformanceProfileBtn.Add_Click({
-    Apply-ProfilePerformance
+    Apply-PerformanceProfile
 })
 
-# ============================================
-#  RUN WINDOW
-# ============================================
+# ============================
+# RUN WINDOW
+# ============================
+
 $window.ShowDialog() | Out-Null
